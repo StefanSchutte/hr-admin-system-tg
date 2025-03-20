@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("EMPLOYEE") // Changed from enum to string
+  employee  Employee? @relation(fields: [employeeId], references: [id])
+  employeeId String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Employee model
+model Employee {
+  id              String   @id @default(cuid())
+  firstName       String
+  lastName        String
+  telephoneNumber String
+  emailAddress    String   @unique
+  status          String   @default("ACTIVE") // Changed from enum to string
+  manager         Employee? @relation("EmployeeToManager", fields: [managerId], references: [id])
+  managerId       String?
+  subordinates    Employee[] @relation("EmployeeToManager")
+  user            User?
+  departments     EmployeeDepartment[]
+  managedDepartments Department[] @relation("DepartmentManager")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Department model
+model Department {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  status     String   @default("ACTIVE") // Changed from enum to string
+  manager    Employee @relation("DepartmentManager", fields: [managerId], references: [id])
+  managerId  String
+  employees  EmployeeDepartment[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// Many-to-Many relationship between Employee and Department
+model EmployeeDepartment {
+  id          String   @id @default(cuid())
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId  String
+  department  Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  departmentId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([employeeId, departmentId])
+}
+
+// These are now just TypeScript constants to use in your code, not Prisma enums
+// You can create a separate file for these constants
