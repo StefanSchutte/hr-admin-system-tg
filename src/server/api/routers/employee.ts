@@ -4,6 +4,28 @@ import { hash } from "bcrypt";
 import { TRPCError } from "@trpc/server";
 import { Prisma } from "@prisma/client";
 
+function handlePrismaError(error: unknown): never {
+    // Handle the unique constraint violation
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+            // Check if the constraint violation is on the emailAddress field
+            const target = (error.meta?.target as string[] | undefined) ?? [];
+            if (target.includes('emailAddress')) {
+                throw new TRPCError({
+                    code: 'CONFLICT',
+                    message: 'Email address already exists'
+                });
+            } else {
+                throw new TRPCError({
+                    code: 'CONFLICT',
+                    message: 'A unique constraint violation occurred'
+                });
+            }
+        }
+    }
+    throw error;
+}
+
 export const employeeRouter = createTRPCRouter({
 
     getAll: protectedProcedure
@@ -19,7 +41,7 @@ export const employeeRouter = createTRPCRouter({
             const { session } = ctx;
 
             // Base query conditions
-            const whereConditions: any = {};
+            const whereConditions: Prisma.EmployeeWhereInput = {};
 
             // Add status filter if not ALL
             if (status !== "ALL") {
@@ -102,10 +124,9 @@ export const employeeRouter = createTRPCRouter({
         .input(z.string())
         .query(async ({ ctx, input }) => {
             const { session } = ctx;
-            const employeeId = input;
 
             const employee = await ctx.db.employee.findUnique({
-                where: { id: employeeId },
+                where: { id: input },
                 include: {
                     manager: true,
                     departments: {
@@ -194,26 +215,7 @@ export const employeeRouter = createTRPCRouter({
                     return employee;
                 });
             } catch (error) {
-                // Handle the unique constraint violation
-                if (error instanceof Prisma.PrismaClientKnownRequestError) {
-                    if (error.code === 'P2002') {
-                        // Check if the constraint violation is on the emailAddress field
-                        const target = (error.meta?.target as string[] | undefined) || [];
-                        if (target.includes('emailAddress')) {
-                            throw new TRPCError({
-                                code: 'CONFLICT',
-                                message: 'Email address already exists'
-                            });
-                        } else {
-                            throw new TRPCError({
-                                code: 'CONFLICT',
-                                message: 'A unique constraint violation occurred'
-                            });
-                        }
-                    }
-                }
-                // Re-throw other errors
-                throw error;
+                handlePrismaError(error);
             }
         }),
 
@@ -247,19 +249,12 @@ export const employeeRouter = createTRPCRouter({
                     });
                 }
 
-                // Permission checks for viewing/editing
-                if (session.user.role === "EMPLOYEE" && session.user.employeeId !== id) {
-                    throw new TRPCError({
-                        code: "FORBIDDEN",
-                        message: "Unauthorized operation"
-                    });
-                }
+                const isAuthorized =
+                    session.user.role === "ADMIN" || // Admins can access any employee
+                    session.user.employeeId === id || // Users can access their own data
+                    (session.user.role === "MANAGER" && session.user.employeeId === employee.managerId); // Managers can access their subordinates
 
-                if (
-                    session.user.role === "MANAGER" &&
-                    session.user.employeeId !== id &&
-                    session.user.employeeId !== employee.managerId
-                ) {
+                if (!isAuthorized) {
                     throw new TRPCError({
                         code: "FORBIDDEN",
                         message: "Unauthorized operation"
@@ -267,7 +262,7 @@ export const employeeRouter = createTRPCRouter({
                 }
 
                 // Build update data - basic fields that anyone can update
-                const updateData: any = {
+                const updateData: Prisma.EmployeeUpdateInput = {
                     firstName,
                     lastName,
                     telephoneNumber,
@@ -277,7 +272,7 @@ export const employeeRouter = createTRPCRouter({
                 // Only ADMIN can update status and manager
                 if (session.user.role === "ADMIN") {
                     if (managerId !== undefined) {
-                        updateData.managerId = managerId;
+                        updateData.manager = managerId ? { connect: { id: managerId } } : { disconnect: true };
                     }
                     if (status !== undefined) {
                         updateData.status = status;
@@ -303,25 +298,7 @@ export const employeeRouter = createTRPCRouter({
 
                 return updatedEmployee;
             } catch (error) {
-                // Handle the unique constraint violation
-                if (error instanceof Prisma.PrismaClientKnownRequestError) {
-                    if (error.code === 'P2002') {
-                        // Check if the constraint violation is on the emailAddress field
-                        const target = (error.meta?.target as string[] | undefined) || [];
-                        if (target.includes('emailAddress')) {
-                            throw new TRPCError({
-                                code: 'CONFLICT',
-                                message: 'Email address already exists'
-                            });
-                        } else {
-                            throw new TRPCError({
-                                code: 'CONFLICT',
-                                message: 'A unique constraint violation occurred'
-                            });
-                        }
-                    }
-                }
-                throw error;
+                handlePrismaError(error);
             }
         }),
 

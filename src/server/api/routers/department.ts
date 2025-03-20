@@ -18,7 +18,7 @@ export const departmentRouter = createTRPCRouter({
             const { session } = ctx;
 
             // Base query conditions
-            const whereConditions: any = {};
+            const whereConditions: Prisma.DepartmentWhereInput = {};
 
             // Add status filter if not ALL
             if (status !== "ALL") {
@@ -58,10 +58,9 @@ export const departmentRouter = createTRPCRouter({
     getById: protectedProcedure
         .input(z.string())
         .query(async ({ ctx, input }) => {
-            const departmentId = input;
 
             const department = await ctx.db.department.findUnique({
-                where: { id: departmentId },
+                where: { id: input},
                 include: {
                     manager: true,
                     employees: {
@@ -179,9 +178,11 @@ export const departmentRouter = createTRPCRouter({
                     }
 
                     // Build update data
-                    const updateData: any = {
+                    const updateData: Prisma.DepartmentUpdateInput = {
                         name,
-                        managerId,
+                        manager: {
+                            connect: { id: managerId }
+                        }
                     };
 
                     if (status !== undefined) {
