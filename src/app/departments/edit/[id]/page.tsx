@@ -4,9 +4,14 @@ import { api } from "~/trpc/react";
 import DepartmentCreateEdit from "~/components/departments/DepartmentCreateEdit";
 import { notFound } from "next/navigation";
 import Loader from "~/components/ui/Loader";
+import { use } from "react";
 
-export default function DepartmentEditPage({ params }: { params: { id: string } }) {
-    const { data: department, isLoading } = api.department.getById.useQuery(params.id);
+export default function DepartmentEditPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
+
+    const resolvedParams = params instanceof Promise ? use(params) : params;
+    const id = resolvedParams.id;
+
+    const { data: department, isLoading } = api.department.getById.useQuery(id);
 
     if (isLoading) {
         return <Loader />;

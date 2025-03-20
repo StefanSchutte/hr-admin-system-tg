@@ -91,9 +91,10 @@ export default function EmployeeCreateEdit({ existingEmployee }: EmployeeCreateE
     });
 
     const updateEmployee = api.employee.update.useMutation({
-        onSuccess: () => {
+        onSuccess: (data) => {
             // Invalidate both queries
             void utils.employee.getAll.invalidate();
+            void utils.employee.getById.invalidate(data.id);
             void utils.employee.getManagers.invalidate();
 
             showSuccess("Employee updated successfully!");
@@ -119,7 +120,15 @@ export default function EmployeeCreateEdit({ existingEmployee }: EmployeeCreateE
             emailAddress: existingEmployee.emailAddress,
             managerId: existingEmployee.managerId ?? undefined,
             status: existingEmployee.status ?? "ACTIVE"
-        } : {}
+        } : {
+            // Provide default values for new employees to ensure inputs are always controlled
+            firstName: "",
+            lastName: "",
+            telephoneNumber: "",
+            emailAddress: "",
+            managerId: undefined,
+            status: "ACTIVE"
+        }
     });
 
     // Form submission handler

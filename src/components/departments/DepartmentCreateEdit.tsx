@@ -68,9 +68,10 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
     });
 
     const updateDepartment = api.department.update.useMutation({
-        onSuccess: () => {
+        onSuccess: (data) => {
             // Invalidate the departments query to refresh the list
             void utils.department.getAll.invalidate();
+            void utils.department.getById.invalidate(data.id);
             showSuccess("Department updated successfully!");
             router.push("/departments");
         },
@@ -91,7 +92,12 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
             name: existingDepartment.name,
             managerId: existingDepartment.managerId,
             status: (existingDepartment.status as "ACTIVE" | "INACTIVE") ?? "ACTIVE"
-        } : {}
+        } : {
+            // Provide default values even for new departments to ensure inputs are always controlled
+            name: "",
+            managerId: "",
+            status: "ACTIVE"
+        }
     });
 
     // Form submission handler
