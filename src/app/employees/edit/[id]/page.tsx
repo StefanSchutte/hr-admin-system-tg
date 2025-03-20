@@ -6,6 +6,14 @@ import { notFound } from "next/navigation";
 import Loader from "~/components/ui/Loader";
 import { use } from "react";
 
+/**
+ * Page component for editing an existing employee.
+ * Fetches employee data by ID and passes it to the EmployeeCreateEdit component.
+ * Safely handle params whether it's a Promise or not.
+ * Show loading indicator while data is being fetched and 404 page if employee is not found.
+ * Creates a properly typed employee object that matches the expected props (formattedEmployee).
+ * Render the employee edit form with the fetched data.
+ */
 export default function EmployeeEditPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
 
     const resolvedParams = params instanceof Promise ? use(params) : params;
@@ -21,7 +29,6 @@ export default function EmployeeEditPage({ params }: { params: { id: string } | 
         notFound();
     }
 
-    // Create a properly typed employee object that matches the expected props
     const formattedEmployee = {
         id: employee.id,
         firstName: employee.firstName,

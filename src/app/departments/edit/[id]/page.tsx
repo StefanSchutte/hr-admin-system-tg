@@ -6,6 +6,14 @@ import { notFound } from "next/navigation";
 import Loader from "~/components/ui/Loader";
 import { use } from "react";
 
+/**
+ * Page component for editing an existing department.
+ * Fetches department data by ID and passes it to the DepartmentCreateEdit component.
+ * Safely handle params whether it's a Promise or not.
+ * Fetch department data, Show loading indicator while data is being fetched, 404 page if department is not found.
+ * Create a properly typed department object that matches the expected props.
+ * Render the department edit form with the fetched data.
+ */
 export default function DepartmentEditPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
 
     const resolvedParams = params instanceof Promise ? use(params) : params;
@@ -21,7 +29,6 @@ export default function DepartmentEditPage({ params }: { params: { id: string } 
         notFound();
     }
 
-    // Create a properly typed department object that matches the expected props
     const formattedDepartment = {
         id: department.id,
         name: department.name,
