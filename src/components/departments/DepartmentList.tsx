@@ -292,7 +292,7 @@ export default function DepartmentList() {
                                     size="sm"
                                     className={
                                         pageNum === currentPage
-                                            ? "bg-slate-800 hover:bg-slate-700"
+                                            ? "bg-emerald-700 hover:bg-emerald-600"
                                             : "border-slate-300 hover:bg-slate-100"
                                     }
                                     onClick={() => setCurrentPage(pageNum)}

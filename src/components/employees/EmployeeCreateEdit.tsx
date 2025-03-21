@@ -364,7 +364,7 @@ export default function EmployeeCreateEdit({ existingEmployee }: EmployeeCreateE
                     </form>
                 </CardContent>
 
-                <CardFooter className="flex justify-end space-x-3 pt-2 pb-6 border-t bg-slate-50">
+                <CardFooter className="flex justify-end space-x-3 pt-6 pb-6 border-t bg-slate-50">
                     <Button
                         type="button"
                         variant="outline"

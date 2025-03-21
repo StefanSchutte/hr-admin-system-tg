@@ -7,6 +7,11 @@ import React from "react";
 export const metadata: Metadata = {
     title: "HR Administration System",
     description: "Manage employees and departments",
+    icons: {
+        icon: [
+            {url: '/favicon.png'},
+        ],
+    }
 };
 
 export default function RootLayout({ children, }: { children: React.ReactNode; }) {
