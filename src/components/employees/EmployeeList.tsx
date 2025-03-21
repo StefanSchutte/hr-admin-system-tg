@@ -22,9 +22,12 @@ import {
 } from "~/components/ui/table";
 import { api } from "~/trpc/react";
 import { Card } from "~/components/ui/card";
-import { UserPlus, Search, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { UserPlus, Search } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
 import { EmployeeFilter } from "~/components/employees/EmployeeFilter";
+import { renderSortIndicator, handleSort } from "~/lib/sort-utils";
+import Pagination from "~/components/ui/Pagination";
+import { calculatePagination } from "~/lib/pagination-utils";
 
 /**
  * Represents an employee in the system
@@ -151,18 +154,11 @@ export default function EmployeeList() {
     };
 
     /**
-     * Handles sorting when a column header is clicked.
-     * Toggle direction if clicking the same field.
-     * Set new field and default to ascending
+     * Wrapper for the handleSort utility that works with this component's state
      * @param field - The field to sort by
      */
-    const handleSort = (field: SortField) => {
-        if (sortField === field) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortDirection('asc');
-        }
+    const handleSortColumn = (field: SortField) => {
+        handleSort(field, sortField, setSortField, sortDirection, setSortDirection);
     };
 
     /** Filter employees based on search query */
@@ -205,55 +201,20 @@ export default function EmployeeList() {
         return sortDirection === 'asc' ? comparison : -comparison;
     });
 
-    /** Calculate total pages and paginated data */
-    const totalPages = Math.ceil(sortedEmployees.length / pageSize);
-    const paginatedEmployees = sortedEmployees.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
+    /**
+     * Calculate pagination details for the employee list.
+     * @type {Object} Pagination results
+     * @property {number} totalPages - The total number of pages based on the dataset size and page size.
+     * @property {Employee[]} paginatedItems - The slice of employees for the current page, renamed to paginatedEmployees.
+     */
+    const { totalPages, paginatedItems: paginatedEmployees } = calculatePagination(
+        sortedEmployees,
+        pageSize,
+        currentPage
     );
-
-    /**
-     * Navigates to the next page of results
-     */
-    const goToNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
-        }
-    };
-
-    /**
-     * Navigates to the previous page of results
-     */
-    const goToPrevPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
-    };
 
     /** Check if data is still loading */
     const isLoading = isEmployeesLoading || isManagersLoading || isDepartmentsLoading;
-
-    /**
-     * Renders the sort indicator based on current sort field and direction
-     * @param field - The field to render the indicator for
-     * @returns JSX element for the sort indicator
-     */
-    const renderSortIndicator = (field: SortField) => {
-
-        return (
-            <div className="w-4 flex justify-center">
-                {sortField === field ? (
-                    sortDirection === 'asc' ? (
-                        <ChevronDown className="h-4 w-4" />
-                    ) : (
-                        <ChevronUp className="h-4 w-4" />
-                    )
-                ) : (
-                    <ChevronUp className="h-4 w-4 text-gray-400 opacity-50" />
-                )}
-            </div>
-        );
-    };
 
     return (
         <div className="space-y-6">
@@ -323,40 +284,40 @@ export default function EmployeeList() {
                                 <TableHead className="font-semibold w-32">Actions</TableHead>
                                 <TableHead
                                     className="font-semibold cursor-pointer w-32"
-                                    onClick={() => handleSort('firstName')}
+                                    onClick={() => handleSortColumn('firstName')}
                                 >
                                     <div className="flex items-center justify-between">
                                         <span>First Name</span>
-                                        {renderSortIndicator('firstName')}
+                                        {renderSortIndicator(sortField, 'firstName', sortDirection)}
                                     </div>
                                 </TableHead>
                                 <TableHead
                                     className="font-semibold cursor-pointer w-32"
-                                    onClick={() => handleSort('lastName')}
+                                    onClick={() => handleSortColumn('lastName')}
                                 >
                                     <div className="flex items-center justify-between">
                                         <span>Last Name</span>
-                                        {renderSortIndicator('lastName')}
+                                        {renderSortIndicator(sortField, 'lastName', sortDirection)}
                                     </div>
                                 </TableHead>
                                 <TableHead className="font-semibold w-40">Telephone Number</TableHead>
                                 <TableHead className="font-semibold w-48">Email Address</TableHead>
                                 <TableHead
                                     className="font-semibold cursor-pointer w-40"
-                                    onClick={() => handleSort('manager')}
+                                    onClick={() => handleSortColumn('manager')}
                                 >
                                     <div className="flex items-center justify-between">
                                         <span>Manager</span>
-                                        {renderSortIndicator('manager')}
+                                        {renderSortIndicator(sortField, 'manager', sortDirection)}
                                     </div>
                                 </TableHead>
                                 <TableHead
                                     className="font-semibold cursor-pointer w-28"
-                                    onClick={() => handleSort('status')}
+                                    onClick={() => handleSortColumn('status')}
                                 >
                                     <div className="flex items-center justify-between">
                                         <span>Status</span>
-                                        {renderSortIndicator('status')}
+                                        {renderSortIndicator(sortField, 'status', sortDirection)}
                                     </div>
                                 </TableHead>
                             </TableRow>
@@ -431,57 +392,11 @@ export default function EmployeeList() {
 
             {/* Pagination */}
             {sortedEmployees.length > 0 && (
-                <div className="flex items-center justify-center space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={currentPage === 1}
-                        onClick={goToPrevPage}
-                        className="border-slate-300 hover:bg-slate-100"
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                        <span className="ml-1">Previous</span>
-                    </Button>
-
-                    <div className="flex space-x-1">
-                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                            let pageNum = i + 1;
-                            if (totalPages > 5 && currentPage > 3) {
-                                pageNum = currentPage - 3 + i;
-                                if (pageNum > totalPages) {
-                                    pageNum = totalPages - (4 - i);
-                                }
-                            }
-
-                            return (
-                                <Button
-                                    key={pageNum}
-                                    variant={pageNum === currentPage ? "default" : "outline"}
-                                    size="sm"
-                                    className={
-                                        pageNum === currentPage
-                                            ? "bg-emerald-700 hover:bg-emerald-600"
-                                            : "border-slate-300 hover:bg-slate-100"
-                                    }
-                                    onClick={() => setCurrentPage(pageNum)}
-                                >
-                                    {pageNum}
-                                </Button>
-                            );
-                        })}
-                    </div>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={currentPage === totalPages || totalPages === 0}
-                        onClick={goToNextPage}
-                        className="border-slate-300 hover:bg-slate-100"
-                    >
-                        <span className="mr-1">Next</span>
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             )}
         </div>
     );

@@ -22,14 +22,31 @@ import {
 } from "~/components/ui/table";
 import { api } from "~/trpc/react";
 import { Card } from "~/components/ui/card";
-import { PlusCircle, Search, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { PlusCircle, Search } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
 import { DepartmentFilter } from "~/components/departments/DepartmentFilter";
+import { renderSortIndicator, handleSort } from "~/lib/sort-utils";
+import Pagination from "~/components/ui/Pagination";
+import { calculatePagination } from "~/lib/pagination-utils";
 
 /** Available fields for sorting departments */
 type SortField = 'name' | 'manager' | 'status';
 /** Sort direction options */
 type SortDirection = 'asc' | 'desc';
+
+/**
+ * Type representing a department in the system
+ */
+type Department = {
+    id: string;
+    name: string;
+    managerId: string;
+    status: string;
+    manager: {
+        firstName: string;
+        lastName: string;
+    };
+};
 
 /**
  * DepartmentList component
@@ -101,18 +118,11 @@ export default function DepartmentList() {
     };
 
     /**
-     * Handles sorting when a column header is clicked.
-     * Toggle direction if clicking the same field.
-     * Set new field and default to ascending
+     * Wrapper for the handleSort utility that works with this component's state
      * @param field - The field to sort by
      */
-    const handleSort = (field: SortField) => {
-        if (sortField === field) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortDirection('asc');
-        }
+    const handleSortColumn = (field: SortField) => {
+        handleSort(field, sortField, setSortField, sortDirection, setSortDirection);
     };
 
     /** Filter departments based on search query */
@@ -127,7 +137,7 @@ export default function DepartmentList() {
     });
 
     /** Sort the filtered departments */
-    const sortedDepartments = [...(filteredDepartments || [])].sort((a, b) => {
+    const sortedDepartments: Department[] = [...(filteredDepartments || [])].sort((a, b) => {
         let comparison;
 
         switch (sortField) {
@@ -149,48 +159,17 @@ export default function DepartmentList() {
         return sortDirection === 'asc' ? comparison : -comparison;
     });
 
-    /** Calculate total pages and paginated data */
-    const totalPages = Math.ceil((sortedDepartments?.length || 0) / pageSize);
-    const paginatedDepartments = sortedDepartments?.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
-    );
-
-    /** Navigates to the next page of results */
-    const goToNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
-        }
-    };
-
-    /** Navigates to the previous page of results */
-    const goToPrevPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
-    };
-
     /**
-     * Renders the sort indicator based on current sort field and direction
-     * @param field - The field to render the indicator for
-     * @returns JSX element for the sort indicator
+     * Calculate pagination details for the department list.
+     * @type {Object} Pagination results
+     * @property {number} totalPages - The total number of pages based on the dataset size and page size
+     * @property {Department[]} paginatedItems - The slice of departments for the current page, renamed to paginatedDepartments
      */
-    const renderSortIndicator = (field: SortField) => {
-
-        return (
-            <div className="w-4 flex justify-center">
-                {sortField === field ? (
-                    sortDirection === 'asc' ? (
-                        <ChevronDown className="h-4 w-4" />
-                    ) : (
-                        <ChevronUp className="h-4 w-4" />
-                    )
-                ) : (
-                    <ChevronUp className="h-4 w-4 text-gray-400 opacity-50" />
-                )}
-            </div>
-        );
-    };
+    const { totalPages, paginatedItems: paginatedDepartments } = calculatePagination<Department>(
+        sortedDepartments,
+        pageSize,
+        currentPage
+    );
 
     return (
         <div className="space-y-6">
@@ -254,29 +233,29 @@ export default function DepartmentList() {
                                 <TableHead className="font-semibold w-32">Actions</TableHead>
                                 <TableHead
                                     className="font-semibold cursor-pointer w-64"
-                                    onClick={() => handleSort('name')}
+                                    onClick={() => handleSortColumn('name')}
                                 >
                                     <div className="flex items-center justify-between">
                                         <span>Name</span>
-                                        {renderSortIndicator('name')}
+                                        {renderSortIndicator(sortField, 'name', sortDirection)}
                                     </div>
                                 </TableHead>
                                 <TableHead
                                     className="font-semibold cursor-pointer w-64"
-                                    onClick={() => handleSort('manager')}
+                                    onClick={() => handleSortColumn('manager')}
                                 >
                                     <div className="flex items-center justify-between">
                                         <span>Manager</span>
-                                        {renderSortIndicator('manager')}
+                                        {renderSortIndicator(sortField, 'manager', sortDirection)}
                                     </div>
                                 </TableHead>
                                 <TableHead
                                     className="font-semibold cursor-pointer w-32"
-                                    onClick={() => handleSort('status')}
+                                    onClick={() => handleSortColumn('status')}
                                 >
                                     <div className="flex items-center justify-between">
                                         <span>Status</span>
-                                        {renderSortIndicator('status')}
+                                        {renderSortIndicator(sortField, 'status', sortDirection)}
                                     </div>
                                 </TableHead>
                             </TableRow>
@@ -345,58 +324,12 @@ export default function DepartmentList() {
             </Card>
 
             {/* Pagination */}
-            {filteredDepartments && filteredDepartments.length > 0 && (
-                <div className="flex items-center justify-center space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={currentPage === 1}
-                        onClick={goToPrevPage}
-                        className="border-slate-300 hover:bg-slate-100"
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                        <span className="ml-1">Previous</span>
-                    </Button>
-
-                    <div className="flex space-x-1">
-                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                            let pageNum = i + 1;
-                            if (totalPages > 5 && currentPage > 3) {
-                                pageNum = currentPage - 3 + i;
-                                if (pageNum > totalPages) {
-                                    pageNum = totalPages - (4 - i);
-                                }
-                            }
-
-                            return (
-                                <Button
-                                    key={pageNum}
-                                    variant={pageNum === currentPage ? "default" : "outline"}
-                                    size="sm"
-                                    className={
-                                        pageNum === currentPage
-                                            ? "bg-emerald-700 hover:bg-emerald-600"
-                                            : "border-slate-300 hover:bg-slate-100"
-                                    }
-                                    onClick={() => setCurrentPage(pageNum)}
-                                >
-                                    {pageNum}
-                                </Button>
-                            );
-                        })}
-                    </div>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={currentPage === totalPages || totalPages === 0}
-                        onClick={goToNextPage}
-                        className="border-slate-300 hover:bg-slate-100"
-                    >
-                        <span className="mr-1">Next</span>
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                </div>
+            {sortedDepartments.length > 0 && (
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             )}
         </div>
     );
