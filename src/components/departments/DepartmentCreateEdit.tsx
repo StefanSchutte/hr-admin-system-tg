@@ -255,15 +255,7 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
 
                 {(managers.length > 0 || managersLoading) && (
                     <CardFooter className="flex justify-end space-x-3 pt-6 pb-6 border-t bg-slate-50">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => router.push("/departments")}
-                            className="border-slate-300 text-slate-700 hover:bg-slate-100"
-                        >
-                            <X className="mr-2 h-4 w-4" />
-                            Cancel
-                        </Button>
+
                         <Button
                             type="submit"
                             onClick={handleSubmit(onSubmit)}
@@ -281,6 +273,16 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
                                     {existingDepartment ? "Update" : "Create"} Department
                                 </>
                             )}
+                        </Button>
+
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => router.push("/departments")}
+                            className="border-slate-300 text-slate-700 hover:bg-slate-100"
+                        >
+                            <X className="mr-2 h-4 w-4" />
+                            Cancel
                         </Button>
                     </CardFooter>
                 )}

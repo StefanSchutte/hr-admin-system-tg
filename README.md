@@ -11,6 +11,9 @@ This project is an HR Administration System built with the T3 stack, designed to
     - Admins: Full access to all employees and departments
     - Managers: Access to their departments and subordinates
     - Employees: Access to their own information only
+- **Status Management**: Activate/deactivate employees and departments
+- **Pagination**: View data in manageable pages
+- **Search and Filtering**: Filter employees and departments by various criteria
 
 ## Tech Stack
 
@@ -19,9 +22,11 @@ This project is an HR Administration System built with the T3 stack, designed to
 - **Styling**: Tailwind CSS with shadcn/ui components
 - **Database**: SQLite
 - **ORM**: Prisma
-- **Authentication**: NextAuth.js
+- **Authentication**: NextAuth.js with Credentials Provider
 - **API Layer**: tRPC
 - **Form Validation**: Zod with react-hook-form
+- **State Management**: React Query (via tRPC)
+- **UI Components**: Lucide React for icons
 
 ## Getting Started
 
@@ -34,8 +39,8 @@ This project is an HR Administration System built with the T3 stack, designed to
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/hr-administration-system.git
-   cd hr-administration-system
+   git clone https://github.com/yourusername/hr-admin-system-tg.git
+   cd hr-admin-system-tg
    ```
 
 2. Install dependencies:
@@ -84,14 +89,26 @@ The seeding script creates an admin user with the following credentials:
 │   └── seed.ts           # Database seeding script
 ├── public/               # Static assets
 ├── src/
-│   ├── components/       # UI components
+│   ├── app/              # Next.js pages and routes
+│   │   ├── api/          # API endpoints
+│   │   ├── departments/  # Department pages
+│   │   ├── employees/    # Employee pages
+│   │   ├── layout.tsx    # Root layout
+│   │   ├── page.tsx      # Login page
+│   │   └── providers.tsx # Client providers
+│   ├── components/       # Shared UI components
+│   │   ├── auth/         # Authentication components
+│   │   ├── departments/  # Department-specific components
+│   │   ├── employees/    # Employee-specific components
+│   │   └── ui/           # UI components
+│   ├── lib/              # Utility functions
 │   ├── server/           # Server-side code
 │   │   ├── api/          # API routes and tRPC routers
 │   │   ├── auth/         # Authentication configuration
 │   │   └── db.ts         # Database client
-│   ├── types/            # TypeScript type definitions
-│   ├── app/              # Next.js pages and routes
-│   └── trpc/             # tRPC client setup
+│   ├── styles/           # Global styles
+│   ├── trpc/             # tRPC client setup
+│   └── types/            # TypeScript type definitions
 └── ...
 ```
 
@@ -121,15 +138,19 @@ The system implements the following access controls:
     - Can view and edit all employees and departments
     - Can change an employee's manager and status
     - Can create/edit departments and assign managers
+    - Can activate/deactivate employees and departments
 
 - **Manager (MANAGER)**:
     - Can view all employees in their departments
     - Can view departments they manage
+    - Can edit employee details except for manager and status
     - Cannot change an employee's manager or status
+    - Cannot create or edit departments
 
 - **Employee (EMPLOYEE)**:
     - Can only view and edit their own information
     - Cannot change their manager or status
+    - Cannot view other employees or departments
 
 ## Automatic User Creation
 
@@ -137,6 +158,10 @@ When an employee is added, a user is automatically created with:
 - Email: Same as the employee's email address
 - Password: Password123# (default)
 - Role: EMPLOYEE (automatically updated to MANAGER when assigned as department manager)
+
+Role transitions are managed automatically:
+- When an employee is assigned as a department manager, their role changes to MANAGER
+- When an employee is removed as a department manager and doesn't manage any other departments or employees, their role reverts to EMPLOYEE
 
 ## Quick Start Script
 

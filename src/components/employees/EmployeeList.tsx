@@ -27,7 +27,7 @@ import {
     CardHeader,
     CardTitle,
 } from "~/components/ui/card";
-import { UserPlus, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { UserPlus, Search, Filter, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
 
 // Define the Employee type inline
@@ -45,8 +45,11 @@ type Employee = {
     } | null;
 };
 
+// Define sorting options
+type SortField = 'firstName' | 'lastName' | 'manager' | 'status';
+type SortDirection = 'asc' | 'desc';
+
 // Type guard to check if an employee is valid
-// Better approach to the type guard function
 function isValidEmployee(employee: unknown): employee is Employee {
     if (!employee || typeof employee !== 'object') return false;
 
@@ -69,6 +72,10 @@ export default function EmployeeList() {
     const [pageSize, setPageSize] = useState<number>(10);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const { showSuccess, showError, showLoading, dismissLoading } = useToast();
+
+    // Add sorting state
+    const [sortField, setSortField] = useState<SortField>('firstName');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
     // Fetch employees with filters
     const {
@@ -118,6 +125,18 @@ export default function EmployeeList() {
         }
     };
 
+    // Handle sorting
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            // Toggle direction if clicking the same field
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            // Set new field and default to ascending
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
+
     // Filter employees based on search query
     const filteredEmployees = employees
         .filter(isValidEmployee)
@@ -132,9 +151,35 @@ export default function EmployeeList() {
             return fullName.includes(query) || email.includes(query) || phone.includes(query);
         });
 
+    // Sort the filtered employees
+    const sortedEmployees = [...filteredEmployees].sort((a, b) => {
+        let comparison = 0;
+
+        switch (sortField) {
+            case 'firstName':
+                comparison = a.firstName.localeCompare(b.firstName);
+                break;
+            case 'lastName':
+                comparison = a.lastName.localeCompare(b.lastName);
+                break;
+            case 'manager':
+                const managerA = a.manager ? `${a.manager.firstName} ${a.manager.lastName}` : '';
+                const managerB = b.manager ? `${b.manager.firstName} ${b.manager.lastName}` : '';
+                comparison = managerA.localeCompare(managerB);
+                break;
+            case 'status':
+                comparison = a.status.localeCompare(b.status);
+                break;
+            default:
+                comparison = 0;
+        }
+
+        return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
     // Calculate total pages and paginated data
-    const totalPages = Math.ceil(filteredEmployees.length / pageSize);
-    const paginatedEmployees = filteredEmployees.slice(
+    const totalPages = Math.ceil(sortedEmployees.length / pageSize);
+    const paginatedEmployees = sortedEmployees.slice(
         (currentPage - 1) * pageSize,
         currentPage * pageSize
     );
@@ -154,6 +199,24 @@ export default function EmployeeList() {
 
     // Check if data is still loading
     const isLoading = isEmployeesLoading || isManagersLoading || isDepartmentsLoading;
+
+    // Render sort indicator based on current sort field and direction
+    const renderSortIndicator = (field: SortField) => {
+
+        return (
+            <div className="w-4 flex justify-center">
+                {sortField === field ? (
+                    sortDirection === 'asc' ? (
+                        <ChevronDown className="h-4 w-4" />
+                    ) : (
+                        <ChevronUp className="h-4 w-4" />
+                    )
+                ) : (
+                    <ChevronUp className="h-4 w-4 text-gray-400 opacity-50" />
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-6">
@@ -287,13 +350,45 @@ export default function EmployeeList() {
                     <Table>
                         <TableHeader className="bg-slate-100">
                             <TableRow>
-                                <TableHead className="font-semibold">Actions</TableHead>
-                                <TableHead className="font-semibold">First Name</TableHead>
-                                <TableHead className="font-semibold">Last Name</TableHead>
-                                <TableHead className="font-semibold">Telephone Number</TableHead>
-                                <TableHead className="font-semibold">Email Address</TableHead>
-                                <TableHead className="font-semibold">Manager</TableHead>
-                                <TableHead className="font-semibold">Status</TableHead>
+                                <TableHead className="font-semibold w-32">Actions</TableHead>
+                                <TableHead
+                                    className="font-semibold cursor-pointer w-32"
+                                    onClick={() => handleSort('firstName')}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>First Name</span>
+                                        {renderSortIndicator('firstName')}
+                                    </div>
+                                </TableHead>
+                                <TableHead
+                                    className="font-semibold cursor-pointer w-32"
+                                    onClick={() => handleSort('lastName')}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Last Name</span>
+                                        {renderSortIndicator('lastName')}
+                                    </div>
+                                </TableHead>
+                                <TableHead className="font-semibold w-40">Telephone Number</TableHead>
+                                <TableHead className="font-semibold w-48">Email Address</TableHead>
+                                <TableHead
+                                    className="font-semibold cursor-pointer w-40"
+                                    onClick={() => handleSort('manager')}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Manager</span>
+                                        {renderSortIndicator('manager')}
+                                    </div>
+                                </TableHead>
+                                <TableHead
+                                    className="font-semibold cursor-pointer w-28"
+                                    onClick={() => handleSort('status')}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Status</span>
+                                        {renderSortIndicator('status')}
+                                    </div>
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -306,7 +401,7 @@ export default function EmployeeList() {
                                         <div className="mt-2 text-sm text-slate-500">Loading data...</div>
                                     </TableCell>
                                 </TableRow>
-                            ) : filteredEmployees.length === 0 ? (
+                            ) : sortedEmployees.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={7} className="text-center py-8 text-slate-600">
                                         No employees found
@@ -365,7 +460,7 @@ export default function EmployeeList() {
             </Card>
 
             {/* Pagination */}
-            {filteredEmployees.length > 0 && (
+            {sortedEmployees.length > 0 && (
                 <div className="flex items-center justify-center space-x-2">
                     <Button
                         variant="outline"

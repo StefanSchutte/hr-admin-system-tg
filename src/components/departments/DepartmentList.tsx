@@ -27,8 +27,12 @@ import {
     CardHeader,
     CardTitle,
 } from "~/components/ui/card";
-import { PlusCircle, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlusCircle, Search, Filter, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
+
+// Define sorting options
+type SortField = 'name' | 'manager' | 'status';
+type SortDirection = 'asc' | 'desc';
 
 export default function DepartmentList() {
     const router = useRouter();
@@ -37,6 +41,10 @@ export default function DepartmentList() {
     const [pageSize, setPageSize] = useState<number>(10);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const { showSuccess, showError, showLoading, dismissLoading } = useToast();
+
+    // Add sorting state
+    const [sortField, setSortField] = useState<SortField>('name');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
     // Fetch departments with filters
     const {
@@ -78,6 +86,18 @@ export default function DepartmentList() {
         }
     };
 
+    // Handle sorting
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            // Toggle direction if clicking the same field
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            // Set new field and default to ascending
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
+
     // Filter departments based on search query
     const filteredDepartments = departments?.filter(department => {
         if (!searchQuery) return true;
@@ -89,9 +109,32 @@ export default function DepartmentList() {
         return name.includes(query) || managerName.includes(query);
     });
 
+    // Sort the filtered departments
+    const sortedDepartments = [...(filteredDepartments || [])].sort((a, b) => {
+        let comparison = 0;
+
+        switch (sortField) {
+            case 'name':
+                comparison = a.name.localeCompare(b.name);
+                break;
+            case 'manager':
+                const managerA = a.manager ? `${a.manager.firstName} ${a.manager.lastName}` : '';
+                const managerB = b.manager ? `${b.manager.firstName} ${b.manager.lastName}` : '';
+                comparison = managerA.localeCompare(managerB);
+                break;
+            case 'status':
+                comparison = a.status.localeCompare(b.status);
+                break;
+            default:
+                comparison = 0;
+        }
+
+        return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
     // Calculate total pages and paginated data
-    const totalPages = Math.ceil((filteredDepartments?.length || 0) / pageSize);
-    const paginatedDepartments = filteredDepartments?.slice(
+    const totalPages = Math.ceil((sortedDepartments?.length || 0) / pageSize);
+    const paginatedDepartments = sortedDepartments?.slice(
         (currentPage - 1) * pageSize,
         currentPage * pageSize
     );
@@ -107,6 +150,24 @@ export default function DepartmentList() {
         if (currentPage > 1) {
             setCurrentPage(currentPage - 1);
         }
+    };
+
+    // Render sort indicator based on current sort field and direction
+    const renderSortIndicator = (field: SortField) => {
+
+        return (
+            <div className="w-4 flex justify-center">
+                {sortField === field ? (
+                    sortDirection === 'asc' ? (
+                        <ChevronDown className="h-4 w-4" />
+                    ) : (
+                        <ChevronUp className="h-4 w-4" />
+                    )
+                ) : (
+                    <ChevronUp className="h-4 w-4 text-gray-400 opacity-50" />
+                )}
+            </div>
+        );
     };
 
     return (
@@ -192,10 +253,34 @@ export default function DepartmentList() {
                     <Table>
                         <TableHeader className="bg-slate-100">
                             <TableRow>
-                                <TableHead className="font-semibold">Actions</TableHead>
-                                <TableHead className="font-semibold">Name</TableHead>
-                                <TableHead className="font-semibold">Manager</TableHead>
-                                <TableHead className="font-semibold">Status</TableHead>
+                                <TableHead className="font-semibold w-32">Actions</TableHead>
+                                <TableHead
+                                    className="font-semibold cursor-pointer w-64"
+                                    onClick={() => handleSort('name')}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Name</span>
+                                        {renderSortIndicator('name')}
+                                    </div>
+                                </TableHead>
+                                <TableHead
+                                    className="font-semibold cursor-pointer w-64"
+                                    onClick={() => handleSort('manager')}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Manager</span>
+                                        {renderSortIndicator('manager')}
+                                    </div>
+                                </TableHead>
+                                <TableHead
+                                    className="font-semibold cursor-pointer w-32"
+                                    onClick={() => handleSort('status')}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Status</span>
+                                        {renderSortIndicator('status')}
+                                    </div>
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
