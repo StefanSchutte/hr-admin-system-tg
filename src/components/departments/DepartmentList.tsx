@@ -21,32 +21,41 @@ import {
     TableRow,
 } from "~/components/ui/table";
 import { api } from "~/trpc/react";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "~/components/ui/card";
-import { PlusCircle, Search, Filter, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { Card } from "~/components/ui/card";
+import { PlusCircle, Search, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
+import { DepartmentFilter } from "~/components/departments/DepartmentFilter";
 
-// Define sorting options
+/** Available fields for sorting departments */
 type SortField = 'name' | 'manager' | 'status';
+/** Sort direction options */
 type SortDirection = 'asc' | 'desc';
 
+/**
+ * DepartmentList component
+ * This component displays a list of departments with filtering, sorting, and pagination capabilities.
+ * It allows users to search for departments, filter by status, sort by different fields,
+ * and navigate through paginated results.
+ * @returns Rendered DepartmentList component
+ */
 export default function DepartmentList() {
     const router = useRouter();
+    /** Filter by department status (ALL, ACTIVE, INACTIVE) */
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
+    /** Text search query for filtering departments */
     const [searchQuery, setSearchQuery] = useState<string>("");
+    /** Number of items to display per page */
     const [pageSize, setPageSize] = useState<number>(10);
+    /** Current page number */
     const [currentPage, setCurrentPage] = useState<number>(1);
     const { showSuccess, showError, showLoading, dismissLoading } = useToast();
 
-    // Add sorting state
+    /** Field currently being used for sorting */
     const [sortField, setSortField] = useState<SortField>('name');
+    /** Current sort direction */
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-    // Fetch departments with filters
+    /** Fetch departments with applied filters */
     const {
         data: departments = [],
         isLoading,
@@ -55,14 +64,14 @@ export default function DepartmentList() {
         status: statusFilter as "ACTIVE" | "INACTIVE" | "ALL",
     });
 
-    // Show error toast if data fetching fails
+    /** Show error toast if data fetching fails */
     useEffect(() => {
         if (departmentsError) {
             showError(`Error loading departments: ${departmentsError.message}`);
         }
     }, [departmentsError, showError]);
 
-    // Mutations for activating/deactivating departments
+    /** Mutation for toggling department status */
     const utils = api.useUtils();
     const toggleStatus = api.department.toggleStatus.useMutation({
         onSuccess: (_, variables) => {
@@ -75,6 +84,11 @@ export default function DepartmentList() {
         }
     });
 
+    /**
+     * Handles the toggling of a department's status.
+     * @param id - The ID of the department
+     * @param currentStatus - The current status of the department
+     */
     const handleToggleStatus = async (id: string, currentStatus: string) => {
         const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
         const loadingToastId = await showLoading(`${currentStatus === "ACTIVE" ? "Deactivating" : "Activating"} department...`);
@@ -86,19 +100,22 @@ export default function DepartmentList() {
         }
     };
 
-    // Handle sorting
+    /**
+     * Handles sorting when a column header is clicked.
+     * Toggle direction if clicking the same field.
+     * Set new field and default to ascending
+     * @param field - The field to sort by
+     */
     const handleSort = (field: SortField) => {
         if (sortField === field) {
-            // Toggle direction if clicking the same field
             setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
         } else {
-            // Set new field and default to ascending
             setSortField(field);
             setSortDirection('asc');
         }
     };
 
-    // Filter departments based on search query
+    /** Filter departments based on search query */
     const filteredDepartments = departments?.filter(department => {
         if (!searchQuery) return true;
 
@@ -109,9 +126,9 @@ export default function DepartmentList() {
         return name.includes(query) || managerName.includes(query);
     });
 
-    // Sort the filtered departments
+    /** Sort the filtered departments */
     const sortedDepartments = [...(filteredDepartments || [])].sort((a, b) => {
-        let comparison = 0;
+        let comparison;
 
         switch (sortField) {
             case 'name':
@@ -132,27 +149,32 @@ export default function DepartmentList() {
         return sortDirection === 'asc' ? comparison : -comparison;
     });
 
-    // Calculate total pages and paginated data
+    /** Calculate total pages and paginated data */
     const totalPages = Math.ceil((sortedDepartments?.length || 0) / pageSize);
     const paginatedDepartments = sortedDepartments?.slice(
         (currentPage - 1) * pageSize,
         currentPage * pageSize
     );
 
-    // Handle page navigation
+    /** Navigates to the next page of results */
     const goToNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
         }
     };
 
+    /** Navigates to the previous page of results */
     const goToPrevPage = () => {
         if (currentPage > 1) {
             setCurrentPage(currentPage - 1);
         }
     };
 
-    // Render sort indicator based on current sort field and direction
+    /**
+     * Renders the sort indicator based on current sort field and direction
+     * @param field - The field to render the indicator for
+     * @returns JSX element for the sort indicator
+     */
     const renderSortIndicator = (field: SortField) => {
 
         return (
@@ -183,35 +205,11 @@ export default function DepartmentList() {
                 </Button>
             </div>
 
-            {/* Filters */}
-            <Card className="border-none shadow-md">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-semibold text-slate-700 flex items-center">
-                        <Filter className="mr-2 h-5 w-5 text-slate-500" />
-                        Filters
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-slate-600">Status</label>
-                            <Select
-                                value={statusFilter}
-                                onValueChange={(value) => setStatusFilter(value)}
-                            >
-                                <SelectTrigger className="bg-white">
-                                    <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">All</SelectItem>
-                                    <SelectItem value="ACTIVE">Active Only</SelectItem>
-                                    <SelectItem value="INACTIVE">Inactive Only</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <DepartmentFilter
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                setCurrentPage={setCurrentPage}
+            />
 
             {/* Display controls */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -219,7 +217,7 @@ export default function DepartmentList() {
                     value={pageSize.toString()}
                     onValueChange={(value) => {
                         setPageSize(Number(value));
-                        setCurrentPage(1); // Reset to first page when changing page size
+                        setCurrentPage(1);
                     }}
                 >
                     <SelectTrigger className="w-40 bg-white">

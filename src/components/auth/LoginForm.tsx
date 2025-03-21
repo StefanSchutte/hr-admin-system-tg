@@ -142,7 +142,7 @@ export default function LoginForm() {
                             </form>
                         </Form>
                     </CardContent>
-                    <CardFooter className="flex justify-center border-t pt-4 pb-6">
+                    <CardFooter className="flex justify-center border-t pt-6 pb-6">
                         <Button
                             type="submit"
                             className="w-full bg-emerald-600 hover:bg-emerald-700"

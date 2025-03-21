@@ -21,16 +21,14 @@ import {
     TableRow,
 } from "~/components/ui/table";
 import { api } from "~/trpc/react";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "~/components/ui/card";
-import { UserPlus, Search, Filter, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { Card } from "~/components/ui/card";
+import { UserPlus, Search, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
+import { EmployeeFilter } from "~/components/employees/EmployeeFilter";
 
-// Define the Employee type inline
+/**
+ * Represents an employee in the system
+ */
 type Employee = {
     id: string;
     firstName: string;
@@ -45,11 +43,20 @@ type Employee = {
     } | null;
 };
 
-// Define sorting options
+/**
+ * Available fields for sorting employees
+ */
 type SortField = 'firstName' | 'lastName' | 'manager' | 'status';
+/**
+ * Sort direction options
+ */
 type SortDirection = 'asc' | 'desc';
 
-// Type guard to check if an employee is valid
+/**
+ * Type guard to check if an object is a valid Employee.
+ * @param employee - The object to check
+ * @returns True if the object is a valid Employee, false otherwise
+ */
 function isValidEmployee(employee: unknown): employee is Employee {
     if (!employee || typeof employee !== 'object') return false;
 
@@ -63,21 +70,34 @@ function isValidEmployee(employee: unknown): employee is Employee {
         typeof e.status === 'string';
 }
 
+/**
+ * EmployeeList component
+ * This component displays a list of employees with filtering, sorting, and pagination capabilities.
+ * It allows users to search for employees, filter by status, department, or manager, sort by different fields, and navigate through paginated results.
+ * @returns Rendered EmployeeList component
+ */
 export default function EmployeeList() {
     const router = useRouter();
+    /** Filter by employee status (ALL, ACTIVE, INACTIVE) */
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
+    /** Filter by manager (manager ID or null for all) */
     const [managerFilter, setManagerFilter] = useState<string | null>(null);
+    /** Filter by department (department ID or null for all) */
     const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
+    /** Text search query for filtering employees */
     const [searchQuery, setSearchQuery] = useState<string>("");
+    /** Number of items to display per page */
     const [pageSize, setPageSize] = useState<number>(10);
+    /** Current page number */
     const [currentPage, setCurrentPage] = useState<number>(1);
     const { showSuccess, showError, showLoading, dismissLoading } = useToast();
 
-    // Add sorting state
+    /** Field currently being used for sorting */
     const [sortField, setSortField] = useState<SortField>('firstName');
+    /** Current sort direction */
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-    // Fetch employees with filters
+    /** Fetch employees with applied filters */
     const {
         data: employees = [],
         isLoading: isEmployeesLoading,
@@ -88,20 +108,20 @@ export default function EmployeeList() {
         departmentId: departmentFilter === "null" ? undefined : departmentFilter ?? undefined,
     });
 
-    // Fetch managers for filter dropdown
+    /** Fetch managers for filter dropdown */
     const { data: managers = [], isLoading: isManagersLoading } = api.employee.getManagers.useQuery();
 
-    // Fetch departments for filter dropdown
+    /** Fetch departments for filter dropdown */
     const { data: departments = [], isLoading: isDepartmentsLoading } = api.department.getAll.useQuery({ status: "ACTIVE" });
 
-    // Show error toast if data fetching fails
+    /** Show error toast if data fetching fails */
     useEffect(() => {
         if (employeesError) {
             showError(`Error loading employees: ${employeesError.message}`);
         }
     }, [employeesError, showError]);
 
-    // Mutations for activating/deactivating employees
+    /** Mutation for toggling employee status */
     const utils = api.useUtils();
     const toggleStatus = api.employee.toggleStatus.useMutation({
         onSuccess: (_, variables) => {
@@ -114,6 +134,11 @@ export default function EmployeeList() {
         }
     });
 
+    /**
+     * Handles the toggling of an employee's status.
+     * @param id - The ID of the employee
+     * @param currentStatus - The current status of the employee
+     */
     const handleToggleStatus = async (id: string, currentStatus: string) => {
         const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
         const loadingToastId = await showLoading(`${currentStatus === "ACTIVE" ? "Deactivating" : "Activating"} employee...`);
@@ -125,19 +150,22 @@ export default function EmployeeList() {
         }
     };
 
-    // Handle sorting
+    /**
+     * Handles sorting when a column header is clicked.
+     * Toggle direction if clicking the same field.
+     * Set new field and default to ascending
+     * @param field - The field to sort by
+     */
     const handleSort = (field: SortField) => {
         if (sortField === field) {
-            // Toggle direction if clicking the same field
             setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
         } else {
-            // Set new field and default to ascending
             setSortField(field);
             setSortDirection('asc');
         }
     };
 
-    // Filter employees based on search query
+    /** Filter employees based on search query */
     const filteredEmployees = employees
         .filter(isValidEmployee)
         .filter(employee => {
@@ -151,9 +179,9 @@ export default function EmployeeList() {
             return fullName.includes(query) || email.includes(query) || phone.includes(query);
         });
 
-    // Sort the filtered employees
+    /** Sort the filtered employees */
     const sortedEmployees = [...filteredEmployees].sort((a, b) => {
-        let comparison = 0;
+        let comparison;
 
         switch (sortField) {
             case 'firstName':
@@ -177,30 +205,39 @@ export default function EmployeeList() {
         return sortDirection === 'asc' ? comparison : -comparison;
     });
 
-    // Calculate total pages and paginated data
+    /** Calculate total pages and paginated data */
     const totalPages = Math.ceil(sortedEmployees.length / pageSize);
     const paginatedEmployees = sortedEmployees.slice(
         (currentPage - 1) * pageSize,
         currentPage * pageSize
     );
 
-    // Handle page navigation
+    /**
+     * Navigates to the next page of results
+     */
     const goToNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
         }
     };
 
+    /**
+     * Navigates to the previous page of results
+     */
     const goToPrevPage = () => {
         if (currentPage > 1) {
             setCurrentPage(currentPage - 1);
         }
     };
 
-    // Check if data is still loading
+    /** Check if data is still loading */
     const isLoading = isEmployeesLoading || isManagersLoading || isDepartmentsLoading;
 
-    // Render sort indicator based on current sort field and direction
+    /**
+     * Renders the sort indicator based on current sort field and direction
+     * @param field - The field to render the indicator for
+     * @returns JSX element for the sort indicator
+     */
     const renderSortIndicator = (field: SortField) => {
 
         return (
@@ -231,86 +268,19 @@ export default function EmployeeList() {
                 </Button>
             </div>
 
-            {/* Filters */}
-            <Card className="border-none shadow-md">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-semibold text-slate-700 flex items-center">
-                        <Filter className="mr-2 h-5 w-5 text-slate-500" />
-                        Filters
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-slate-600">Status</label>
-                            <Select
-                                value={statusFilter}
-                                onValueChange={(value) => {
-                                    setStatusFilter(value);
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                <SelectTrigger className="bg-white">
-                                    <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">All</SelectItem>
-                                    <SelectItem value="ACTIVE">Active Only</SelectItem>
-                                    <SelectItem value="INACTIVE">Inactive Only</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+            <EmployeeFilter
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                departmentFilter={departmentFilter}
+                setDepartmentFilter={setDepartmentFilter}
+                managerFilter={managerFilter}
+                setManagerFilter={setManagerFilter}
+                departments={departments}
+                managers={managers}
+                setCurrentPage={setCurrentPage}
+            />
 
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-slate-600">Department</label>
-                            <Select
-                                value={departmentFilter ?? undefined}
-                                onValueChange={(value) => {
-                                    setDepartmentFilter(value);
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                <SelectTrigger className="bg-white">
-                                    <SelectValue placeholder="Select department" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="null">All Departments</SelectItem>
-                                    {departments.map((dept) => (
-                                        <SelectItem key={dept.id} value={dept.id}>
-                                            {dept.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-slate-600">Manager</label>
-                            <Select
-                                value={managerFilter ?? undefined}
-                                onValueChange={(value) => {
-                                    setManagerFilter(value);
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                <SelectTrigger className="bg-white">
-                                    <SelectValue placeholder="Select manager" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="null">All Managers</SelectItem>
-                                    {managers.map((manager) => (
-                                        <SelectItem key={manager.id} value={manager.id}>
-                                            {manager.firstName} {manager.lastName}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Search and display controls */}
+            {/* Search/Display controls */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <Select
                     value={pageSize.toString()}
