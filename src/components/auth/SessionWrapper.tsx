@@ -10,57 +10,82 @@ import { UserCircle, LogOut, Users, Building2 } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
 import Loader from "~/components/ui/Loader";
 
+/**
+ * A session management and layout wrapper component for the application.
+ * This component:
+ * 1. Handles authentication flow and protected routes.
+ * 2. Manages redirects based on authentication status.
+ * 3. Displays appropriate loading states during transitions.
+ * 4. Renders the application layout including header and sidebar when authenticated.
+ * @param props - Component props
+ * @param props.children - Child components to render within the layout.
+ * @returns A wrapped version of the children with authentication and layout.
+ */
 export default function SessionWrapper({ children }: { children: ReactNode }) {
+    /** Access authentication session data and status */
     const { data: session, status } = useSession();
+    /** Get current path for active link styling and redirect decisions */
     const pathname = usePathname();
+    /** Router for navigation and redirects */
     const router = useRouter();
+    /** Toast notifications for user feedback */
     const { showSuccess } = useToast();
+    /** State to track if a redirect is in progress */
     const [isRedirecting, setIsRedirecting] = useState(false);
 
-    // Handle redirects based on authentication
+    /**
+     * Handle redirects based on authentication status and current path.
+     * Redirects:
+     * - Unauthenticated users away from protected routes to login
+     * - Authenticated users away from login page to the main application.
+     * Reset redirecting state when done
+     */
     useEffect(() => {
         if (status === "loading") return;
 
-        // If path is not login and user isn't authenticated, redirect to login
         if (!session && pathname !== "/") {
             setIsRedirecting(true);
             router.push("/");
             return;
         }
 
-        // If user is authenticated and on login page, redirect to employees
         if (session && pathname === "/") {
             setIsRedirecting(true);
             router.push("/employees");
             return;
         }
 
-        // Reset redirecting state when done
         setIsRedirecting(false);
     }, [session, status, pathname, router]);
 
-    // Show loading state during authentication check or redirects
+    /** Show loading state during authentication check or redirects */
     if (status === "loading" || isRedirecting) {
         return <Loader fullScreen />;
     }
 
-    // Show login page without wrapper
+    /** Show login page without wrapper */
     if (!session && pathname === "/") {
         return children;
     }
 
-    // Helper function to determine if a path is active
+    /**
+     * Determines if a navigation link should be highlighted as active.
+     * @param path - The base path to check against the current URL
+     * @returns True if the current path starts with the given path
+     */
     const isActive = (path: string) => {
         return pathname?.startsWith(path);
     };
 
-    // Handle logout with toast notification
+    /**
+     * Handles user logout with success notification
+     */
     const handleLogout = async () => {
         await signOut({ callbackUrl: '/' });
         showSuccess("You have been successfully logged out");
     };
 
-    // Set the sidebar width value in one place for consistency
+    /** Sidebar width value */
     const sidebarWidth = "w-46";
     const sidebarWidthPx = "184px";
 
@@ -135,7 +160,7 @@ export default function SessionWrapper({ children }: { children: ReactNode }) {
                     </div>
                 )}
 
-                {/* Main content with proper margin to avoid sidebar overlap */}
+                {/* Main content */}
                 <main
                     className={`flex-1 min-h-[calc(100vh-4rem)] overflow-auto p-6 bg-gray-50 ${
                         session ? `ml-[${sidebarWidthPx}]` : ''

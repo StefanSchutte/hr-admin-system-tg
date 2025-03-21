@@ -27,19 +27,44 @@ import {
 import { Lock, User } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
 
+/**
+ * Zod validation schema for login form.
+ * Defines validation rules for email and password fields.
+ * Email address field - must be a valid email format.
+ * Password field - required with minimum length of 1.
+ */
 const loginSchema = z.object({
     email: z.string().email({ message: "Please enter a valid email" }),
     password: z.string().min(1, { message: "Password is required" }),
 });
 
+/**
+ * Type definition for login form values
+ * Generated from the Zod schema
+ */
 type LoginValues = z.infer<typeof loginSchema>;
 
+/**
+ * Login form component for user authentication.
+ * This component provides a styled login form with:
+ * - Email and password inputs with validation.
+ * - Form submission handling with loading states.
+ * - Error feedback for authentication failures.
+ * - Success notifications and redirect on successful login.
+ * @returns React component for the login form
+ */
 export default function LoginForm() {
     const router = useRouter();
+    /** State for tracking and displaying authentication errors */
     const [error, setError] = useState<string | null>(null);
+    /** Toast notifications for user feedback */
     const { showSuccess, showError } = useToast();
+    /** State for tracking login request status for loading indicators */
     const [isLoading, setIsLoading] = useState(false);
 
+    /**
+     * React Hook Form setup with Zod validation.
+     */
     const form = useForm<LoginValues>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
@@ -48,6 +73,11 @@ export default function LoginForm() {
         },
     });
 
+    /**
+     * Form submission handler
+     * Attempts authentication with provided credentials and handles success/failure cases.
+     * @param values - Validated form values containing email and password
+     */
     async function onSubmit(values: LoginValues) {
         setError(null);
         setIsLoading(true);
@@ -66,7 +96,7 @@ export default function LoginForm() {
                 showSuccess("Login successful!");
                 router.push("/employees");
             }
-        } catch (err) {
+        } catch {
             setError("An unexpected error occurred");
             showError("An unexpected error occurred");
         } finally {

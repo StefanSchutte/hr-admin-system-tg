@@ -1,17 +1,24 @@
-// src/components/ui/Loader.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 
+/**
+ * Loader component for displaying loading states.
+ * This component renders a spinner with optional text to indicate loading states. It can be displayed inline or as a full-screen overlay.
+ * The component uses client-side mounting to ensure proper hydration and prevent server/client rendering mismatches.
+ * Only render loader after component is mounted client-side.
+ * @param props - Component props
+ * @param props.fullScreen - Whether to display as a full-screen overlay with dark background
+ * @returns React component or null before client-side mounting.
+ */
 export default function Loader({ fullScreen = false }: { fullScreen?: boolean }) {
-    // Use client-side state to ensure server/client rendering matches
+
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Only render loader after component is mounted client-side
     if (!mounted) {
         return null;
     }

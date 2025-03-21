@@ -26,16 +26,33 @@ import {
 import { AlertCircle, Building2, Save, X } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
 
-// Validation schema
+/**
+ * Zod validation schema for department form data
+ * Defines validation rules for department name, manager assignment, and status.
+ * Department name - required with minimum length of 1
+ * Manager ID - required with minimum length of 1.
+ * Department status - optional enum with default value of "ACTIVE"
+ */
 const departmentSchema = z.object({
     name: z.string().min(1, "Department name is required"),
     managerId: z.string().min(1, "Manager is required"),
     status: z.enum(["ACTIVE", "INACTIVE"]).optional().default("ACTIVE"),
 });
 
+/**
+ * Type definition for the department form data.
+ * Generated from the Zod schema.
+ */
 type DepartmentFormData = z.infer<typeof departmentSchema>;
 
+/**
+ * Props interface for the DepartmentCreateEdit component
+ */
 interface DepartmentCreateEditProps {
+    /**
+     * Optional existing department data for edit mode
+     * If provided, the form operates in edit mode; otherwise, it's in create mode
+     */
     existingDepartment?: {
         id: string;
         name: string;
@@ -44,6 +61,16 @@ interface DepartmentCreateEditProps {
     };
 }
 
+/**
+ * Department creation and editing form component.
+ * This component renders a form for creating new departments or editing existing ones.
+ * It handles form validation, submission, and displays appropriate feedback to users.
+ * This component handles both creation and update operations for departments,
+ * including validation, API integration, and form state management.
+ * @param props - Component props
+ * @param props.existingDepartment - Optional existing department data for edit mode
+ * @returns React component
+ */
 export default function DepartmentCreateEdit({ existingDepartment }: DepartmentCreateEditProps) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,13 +78,15 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
 
     const utils = api.useUtils();
 
-    // Fetch managers for dropdown
+    /** Fetch all employees eligible to be department managers */
     const { data: managers = [], isLoading: managersLoading } = api.employee.getAllForDepartmentManager.useQuery();
 
-    // Create and update mutations
+    /**
+     * TRPC mutation for creating a new department.
+     * Invalidate the departments query to refresh the list
+     */
     const createDepartment = api.department.create.useMutation({
         onSuccess: () => {
-            // Invalidate the departments query to refresh the list
             void utils.department.getAll.invalidate();
             showSuccess("Department created successfully!");
             router.push("/departments");
@@ -67,9 +96,12 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
         }
     });
 
+    /**
+     * TRPC mutation for updating an existing department.
+     * Invalidate the departments query to refresh the list
+     */
     const updateDepartment = api.department.update.useMutation({
         onSuccess: (data) => {
-            // Invalidate the departments query to refresh the list
             void utils.department.getAll.invalidate();
             void utils.department.getById.invalidate(data.id);
             showSuccess("Department updated successfully!");
@@ -80,7 +112,10 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
         }
     });
 
-    // Form setup
+    /**
+     * React Hook Form setup with Zod validation.
+     * Provide default values for new departments to ensure inputs are always controlled.
+     */
     const {
         control,
         handleSubmit,
@@ -93,31 +128,32 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
             managerId: existingDepartment.managerId,
             status: (existingDepartment.status as "ACTIVE" | "INACTIVE") ?? "ACTIVE"
         } : {
-            // Provide default values even for new departments to ensure inputs are always controlled
             name: "",
             managerId: "",
             status: "ACTIVE"
         }
     });
 
-    // Form submission handler
+    /**
+     * Form submission handler.
+     * Calls the appropriate mutation based on whether we're creating or editing.
+     * Update existing department else create new department.
+     * @param data - Validated form data
+     */
     const onSubmit = async (data: DepartmentFormData) => {
         setIsSubmitting(true);
         const loadingToastId = await showLoading(existingDepartment ? "Updating department..." : "Creating department...");
 
         try {
             if (existingDepartment) {
-                // Update existing department
                 await updateDepartment.mutateAsync({
                     id: existingDepartment.id,
                     ...data
                 });
             } else {
-                // Create new department
                 await createDepartment.mutateAsync(data);
             }
         } catch (error) {
-            // Handle errors
             setError("root", {
                 type: "manual",
                 message: error instanceof Error ? error.message : "An error occurred"

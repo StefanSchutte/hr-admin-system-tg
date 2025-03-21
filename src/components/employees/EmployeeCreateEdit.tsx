@@ -35,8 +35,16 @@ import {
 } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
 
-
-// Validation schema
+/**
+ * Zod validation schema for employee form data.
+ * Defines validation rules for employee personal information, contact details, and status.
+ * First name - required with minimum length of 1.
+ * Last name - required with minimum length of 1
+ * Telephone number - must contain only digits.
+ * Email address - must be a valid email format
+ * Manager ID - optional reference to another employee.
+ * Employee status - optional enum with default value of "ACTIVE"
+ */
 const employeeSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -46,9 +54,20 @@ const employeeSchema = z.object({
     status: z.enum(["ACTIVE", "INACTIVE"]).optional().default("ACTIVE"),
 });
 
+/**
+ * Type definition for the employee form data
+ * Generated from the Zod schema
+ */
 type EmployeeFormData = z.infer<typeof employeeSchema>;
 
+/**
+ * Props interface for the EmployeeCreateEdit component
+ */
 interface EmployeeCreateEditProps {
+    /**
+     * Optional existing employee data for edit mode
+     * If provided, the form operates in edit mode; otherwise, it's in create mode
+     */
     existingEmployee?: {
         id: string;
         firstName: string;
@@ -60,28 +79,39 @@ interface EmployeeCreateEditProps {
     };
 }
 
+/**
+ * Employee creation and editing form component.
+ * This component renders a form for creating new employees or editing existing ones.
+ * It includes permission checks for admin-only operations, form validation,
+ * and handles API interactions with appropriate feedback.
+ * @param props - Component props
+ * @param props.existingEmployee - Optional existing employee data for edit mode
+ * @returns React component
+ */
 export default function EmployeeCreateEdit({ existingEmployee }: EmployeeCreateEditProps) {
     const router = useRouter();
+    /** Get the current user session to determine permissions */
     const { data: session } = useSession();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { showSuccess, showError, showLoading, dismissLoading } = useToast();
 
+    /** Flag indicating if the current user has administrative privileges */
     const isAdmin = session?.user?.role === "ADMIN";
 
     const utils = api.useUtils();
 
-    // Fetch managers for dropdown
+    /** Fetch managers for dropdown */
     const { data: managers = [] } = api.employee.getManagers.useQuery();
 
-    // Create and update mutations with onSuccess handlers
+    /**
+     * TRPC mutation for creating a new employee.
+     * Create and update mutations with onSuccess handlers.
+     * Invalidate the employees and managers query to refresh the list, since a new employee could potentially be a manager.
+     */
     const createEmployee = api.employee.create.useMutation({
         onSuccess: () => {
-            // Invalidate the employees query to refresh the list
             void utils.employee.getAll.invalidate();
-
-            // Also invalidate the managers query since a new employee could potentially be a manager
             void utils.employee.getManagers.invalidate();
-
             showSuccess("Employee created successfully!");
             router.push("/employees");
         },
@@ -90,13 +120,15 @@ export default function EmployeeCreateEdit({ existingEmployee }: EmployeeCreateE
         }
     });
 
+    /**
+     * TRPC mutation for updating an existing employee.
+     * Invalidate queries.
+     */
     const updateEmployee = api.employee.update.useMutation({
         onSuccess: (data) => {
-            // Invalidate both queries
             void utils.employee.getAll.invalidate();
             void utils.employee.getById.invalidate(data.id);
             void utils.employee.getManagers.invalidate();
-
             showSuccess("Employee updated successfully!");
             router.push("/employees");
         },
@@ -105,7 +137,10 @@ export default function EmployeeCreateEdit({ existingEmployee }: EmployeeCreateE
         }
     });
 
-    // Form setup
+    /**
+     * React Hook Form setup with Zod validation.
+     * Provide default values for new employees to ensure inputs are always controlled
+     */
     const {
         control,
         handleSubmit,
@@ -121,7 +156,6 @@ export default function EmployeeCreateEdit({ existingEmployee }: EmployeeCreateE
             managerId: existingEmployee.managerId ?? undefined,
             status: existingEmployee.status ?? "ACTIVE"
         } : {
-            // Provide default values for new employees to ensure inputs are always controlled
             firstName: "",
             lastName: "",
             telephoneNumber: "",
@@ -131,30 +165,32 @@ export default function EmployeeCreateEdit({ existingEmployee }: EmployeeCreateE
         }
     });
 
-    // Form submission handler
+    /**
+     * Form submission handler.
+     * Calls the appropriate mutation based on whether we're creating or editing.
+     * Transform managerId if it's "null" string.
+     * Update existing employee else create new employee
+     * @param data - Validated form data
+     */
     const onSubmit = async (data: EmployeeFormData) => {
         setIsSubmitting(true);
         const loadingToastId = await showLoading(existingEmployee ? "Updating employee..." : "Creating employee...");
 
         try {
-            // Transform managerId if it's "null" string
             const formData = {
                 ...data,
                 managerId: data.managerId === "null" ? undefined : data.managerId
             };
 
             if (existingEmployee) {
-                // Update existing employee
                 await updateEmployee.mutateAsync({
                     id: existingEmployee.id,
                     ...formData
                 });
             } else {
-                // Create new employee
                 await createEmployee.mutateAsync(formData);
             }
         } catch (error) {
-            // Handle errors
             setError("root", {
                 type: "manual",
                 message: error instanceof Error ? error.message : "An error occurred"
