@@ -5,6 +5,13 @@ import EmployeeCreateEdit from "~/components/employees/EmployeeCreateEdit";
 import { notFound } from "next/navigation";
 import Loader from "~/components/ui/Loader";
 
+type PageProps = {
+    params: {
+        id: string;
+    };
+};
+
+
 /**
  * Page component for editing an existing employee.
  * Fetches employee data by ID and passes it to the EmployeeCreateEdit component.
@@ -13,7 +20,7 @@ import Loader from "~/components/ui/Loader";
  * Creates a properly typed employee object that matches the expected props (formattedEmployee).
  * Render the employee edit form with the fetched data.
  */
-export default function EmployeeEditPage({ params }: { params: { id: string } }) {
+export default function EmployeeEditPage({ params }: PageProps) {
 
     const id = params.id;
 

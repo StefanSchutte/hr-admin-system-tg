@@ -5,6 +5,12 @@ import DepartmentCreateEdit from "~/components/departments/DepartmentCreateEdit"
 import { notFound } from "next/navigation";
 import Loader from "~/components/ui/Loader";
 
+type PageProps = {
+    params: {
+        id: string;
+    };
+};
+
 /**
  * Page component for editing an existing department.
  * Fetches department data by ID and passes it to the DepartmentCreateEdit component.
@@ -13,7 +19,7 @@ import Loader from "~/components/ui/Loader";
  * Create a properly typed department object that matches the expected props.
  * Render the department edit form with the fetched data.
  */
-export default function DepartmentEditPage({ params }: { params: { id: string } }) {
+export default function DepartmentEditPage({ params }: PageProps ) {
 
     const id = params.id;
 
