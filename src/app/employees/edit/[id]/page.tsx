@@ -1,19 +1,15 @@
-// src/app/employees/edit/[id]/page.tsx
-import { Suspense } from "react";
-import Loader from "~/components/ui/Loader";
-import EmployeeEditForm from "./edit-form";
+import EmployeeClientPage from "./client-page";
+import type { PageProps } from "~/types/types";
 
-type PageProps = {
-    params: {
-        id: string;
-    };
-    searchParams?: Record<string, string | string[] | undefined>;
-};
+/**
+ * Server Component for the employee edit page.
+ * Handles the dynamic route parameters and passes the employee ID to the client component.
+ * @param props - The page component props containing route parameters
+ * @returns The client component responsible for fetching and rendering the employee edit form
+ */
+export default async function Page(props: PageProps) {
+    const params = await props.params;
+    const id: string = params.id;
 
-export default function EmployeeEditPage(props: PageProps) {
-    return (
-        <Suspense fallback={<Loader />}>
-            <EmployeeEditForm employeeId={props.params.id} />
-        </Suspense>
-    );
+    return <EmployeeClientPage employeeId={id} />;
 }

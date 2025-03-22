@@ -16,6 +16,20 @@ export type Status = "ACTIVE" | "INACTIVE";
 export type SortDirection = 'asc' | 'desc';
 
 /**
+ * Interface for page component props in the dynamic department and Employee edit route.
+ * In Next.js App Router with this configuration, route params are provided as a Promise.
+ */
+export interface PageProps {
+    /**
+     * The route parameters as a Promise that resolves to an object containing the department ID.
+     * Must be awaited before accessing properties.
+     */
+    params: Promise<{
+        id: string;
+    }>;
+}
+
+/**
  * Employee types
  */
 
