@@ -13,19 +13,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "~/components/ui/select";
-
-/**
- * Props for the DepartmentFilter component
- * @interface DepartmentFilterProps
- * @property {string} statusFilter - Current status filter value ("ALL", "ACTIVE", or "INACTIVE")
- * @property {function} setStatusFilter - Function to update the status filter
- * @property {function} setCurrentPage - Function to reset pagination to page 1 when filters change
- */
-interface DepartmentFilterProps {
-    statusFilter: string;
-    setStatusFilter: (value: string) => void;
-    setCurrentPage: (page: number) => void;
-}
+import type { DepartmentFilterProps } from "~/types/types";
 
 /**
  * DepartmentFilter Component

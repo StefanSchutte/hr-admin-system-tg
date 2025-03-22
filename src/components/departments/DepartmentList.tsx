@@ -28,25 +28,11 @@ import { DepartmentFilter } from "~/components/departments/DepartmentFilter";
 import { renderSortIndicator, handleSort } from "~/lib/sort-utils";
 import Pagination from "~/components/ui/Pagination";
 import { calculatePagination } from "~/lib/pagination-utils";
-
-/** Available fields for sorting departments */
-type SortField = 'name' | 'manager' | 'status';
-/** Sort direction options */
-type SortDirection = 'asc' | 'desc';
-
-/**
- * Type representing a department in the system
- */
-type Department = {
-    id: string;
-    name: string;
-    managerId: string;
-    status: string;
-    manager: {
-        firstName: string;
-        lastName: string;
-    };
-};
+import type {
+    Department,
+    DepartmentSortField,
+    SortDirection
+} from "~/types/types";
 
 /**
  * DepartmentList component
@@ -68,7 +54,7 @@ export default function DepartmentList() {
     const { showSuccess, showError, showLoading, dismissLoading } = useToast();
 
     /** Field currently being used for sorting */
-    const [sortField, setSortField] = useState<SortField>('name');
+    const [sortField, setSortField] = useState<DepartmentSortField>('name');
     /** Current sort direction */
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -121,7 +107,7 @@ export default function DepartmentList() {
      * Wrapper for the handleSort utility that works with this component's state
      * @param field - The field to sort by
      */
-    const handleSortColumn = (field: SortField) => {
+    const handleSortColumn = (field: DepartmentSortField) => {
         handleSort(field, sortField, setSortField, sortDirection, setSortDirection);
     };
 

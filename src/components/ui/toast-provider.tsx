@@ -2,34 +2,7 @@
 
 import { Toaster, toast } from "react-hot-toast";
 import { ReactNode, createContext, useContext } from "react";
-
-/**
- * Type definition for the Toast context
- * Defines the methods available through the useToast hook
- */
-type ToastContextType = {
-    /**
-     * Displays a success toast notification
-     * @param message - The message to display in the toast
-     */
-    showSuccess: (message: string) => void;
-    /**
-     * Displays an error toast notification
-     * @param message - The message to display in the toast
-     */
-    showError: (message: string) => void;
-    /**
-     * Displays a loading toast notification
-     * @param message - The message to display in the toast
-     * @returns A promise that resolves to the toast ID, which can be used to dismiss the toast
-     */
-    showLoading: (message: string) => Promise<string>;
-    /**
-     * Dismisses a loading toast notification by its ID
-     * @param toastId - The ID of the toast to dismiss
-     */
-    dismissLoading: (toastId: string) => void;
-};
+import type { ToastContextType } from "~/types/types";
 
 /**
  * Context to store toast notification methods.

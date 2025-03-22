@@ -1,18 +1,6 @@
 import { Button } from "~/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-/**
- * Props for the Pagination component.
- * @interface PaginationProps
- * @property {number} currentPage - The current page number (1-based)
- * @property {number} totalPages - The total number of pages
- * @property {function} onPageChange - Function called when page changes, receives the new page number
- */
-interface PaginationProps {
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
-}
+import { PaginationProps } from "~/types/types";
 
 /**
  * Pagination Component

@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -34,50 +33,8 @@ import {
     Users
 } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
-
-/**
- * Zod validation schema for employee form data.
- * Defines validation rules for employee personal information, contact details, and status.
- * First name - required with minimum length of 1.
- * Last name - required with minimum length of 1
- * Telephone number - must contain only digits.
- * Email address - must be a valid email format
- * Manager ID - optional reference to another employee.
- * Employee status - optional enum with default value of "ACTIVE"
- */
-const employeeSchema = z.object({
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
-    telephoneNumber: z.string().regex(/^\d+$/, "Must contain only digits"),
-    emailAddress: z.string().email("Valid email is required"),
-    managerId: z.string().optional(),
-    status: z.enum(["ACTIVE", "INACTIVE"]).optional().default("ACTIVE"),
-});
-
-/**
- * Type definition for the employee form data
- * Generated from the Zod schema
- */
-type EmployeeFormData = z.infer<typeof employeeSchema>;
-
-/**
- * Props interface for the EmployeeCreateEdit component
- */
-interface EmployeeCreateEditProps {
-    /**
-     * Optional existing employee data for edit mode
-     * If provided, the form operates in edit mode; otherwise, it's in create mode
-     */
-    existingEmployee?: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        telephoneNumber: string;
-        emailAddress: string;
-        managerId?: string | null;
-        status?: "ACTIVE" | "INACTIVE";
-    };
-}
+import type { EmployeeFormData, EmployeeCreateEditProps } from "~/types/types";
+import { employeeSchema } from "~/types/validation-schemas";
 
 /**
  * Employee creation and editing form component.

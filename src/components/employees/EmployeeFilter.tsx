@@ -13,31 +13,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "~/components/ui/select";
-
-/**
- * Props for the EmployeeFilter component
- * @interface EmployeeFilterProps
- * @property {string} statusFilter - Current status filter value ("ALL", "ACTIVE", or "INACTIVE")
- * @property {function} setStatusFilter - Function to update the status filter
- * @property {string|null} departmentFilter - Current department filter value (department ID or null for all)
- * @property {function} setDepartmentFilter - Function to update the department filter
- * @property {string|null} managerFilter - Current manager filter value (manager ID or null for all)
- * @property {function} setManagerFilter - Function to update the manager filter
- * @property {Array<{id: string, name: string}>} departments - Array of department objects for populating the department filter
- * @property {Array<{id: string, firstName: string, lastName: string}>} managers - Array of manager objects for populating the manager filter
- * @property {function} setCurrentPage - Function to reset pagination to page 1 when filters change
- */
-interface EmployeeFilterProps {
-    statusFilter: string;
-    setStatusFilter: (value: string) => void;
-    departmentFilter: string | null;
-    setDepartmentFilter: (value: string) => void;
-    managerFilter: string | null;
-    setManagerFilter: (value: string) => void;
-    departments: Array<{ id: string; name: string }>;
-    managers: Array<{ id: string; firstName: string; lastName: string }>;
-    setCurrentPage: (page: number) => void;
-}
+import type { EmployeeFilterProps } from "~/types/types";
 
 /**
  * EmployeeFilter Component

@@ -28,32 +28,11 @@ import { EmployeeFilter } from "~/components/employees/EmployeeFilter";
 import { renderSortIndicator, handleSort } from "~/lib/sort-utils";
 import Pagination from "~/components/ui/Pagination";
 import { calculatePagination } from "~/lib/pagination-utils";
-
-/**
- * Represents an employee in the system
- */
-type Employee = {
-    id: string;
-    firstName: string;
-    lastName: string;
-    telephoneNumber: string;
-    emailAddress: string;
-    status: string;
-    manager: {
-        id: string;
-        firstName: string;
-        lastName: string;
-    } | null;
-};
-
-/**
- * Available fields for sorting employees
- */
-type SortField = 'firstName' | 'lastName' | 'manager' | 'status';
-/**
- * Sort direction options
- */
-type SortDirection = 'asc' | 'desc';
+import type {
+    Employee,
+    EmployeeSortField,
+    SortDirection,
+} from "~/types/types";
 
 /**
  * Type guard to check if an object is a valid Employee.
@@ -96,7 +75,7 @@ export default function EmployeeList() {
     const { showSuccess, showError, showLoading, dismissLoading } = useToast();
 
     /** Field currently being used for sorting */
-    const [sortField, setSortField] = useState<SortField>('firstName');
+    const [sortField, setSortField] = useState<EmployeeSortField>('firstName');
     /** Current sort direction */
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -157,7 +136,7 @@ export default function EmployeeList() {
      * Wrapper for the handleSort utility that works with this component's state
      * @param field - The field to sort by
      */
-    const handleSortColumn = (field: SortField) => {
+    const handleSortColumn = (field: EmployeeSortField) => {
         handleSort(field, sortField, setSortField, sortDirection, setSortDirection);
     };
 

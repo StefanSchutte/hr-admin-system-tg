@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { signIn } from "next-auth/react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -26,23 +25,8 @@ import {
 } from "~/components/ui/card";
 import { Lock, User } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
-
-/**
- * Zod validation schema for login form.
- * Defines validation rules for email and password fields.
- * Email address field - must be a valid email format.
- * Password field - required with minimum length of 1.
- */
-const loginSchema = z.object({
-    email: z.string().email({ message: "Please enter a valid email" }),
-    password: z.string().min(1, { message: "Password is required" }),
-});
-
-/**
- * Type definition for login form values
- * Generated from the Zod schema
- */
-type LoginValues = z.infer<typeof loginSchema>;
+import type { LoginValues } from "~/types/types";
+import { loginSchema } from "~/types/validation-schemas"
 
 /**
  * Login form component for user authentication.

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -25,41 +24,8 @@ import {
 } from "~/components/ui/card";
 import { AlertCircle, Building2, Save, X } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
-
-/**
- * Zod validation schema for department form data
- * Defines validation rules for department name, manager assignment, and status.
- * Department name - required with minimum length of 1
- * Manager ID - required with minimum length of 1.
- * Department status - optional enum with default value of "ACTIVE"
- */
-const departmentSchema = z.object({
-    name: z.string().min(1, "Department name is required"),
-    managerId: z.string().min(1, "Manager is required"),
-    status: z.enum(["ACTIVE", "INACTIVE"]).optional().default("ACTIVE"),
-});
-
-/**
- * Type definition for the department form data.
- * Generated from the Zod schema.
- */
-type DepartmentFormData = z.infer<typeof departmentSchema>;
-
-/**
- * Props interface for the DepartmentCreateEdit component
- */
-interface DepartmentCreateEditProps {
-    /**
-     * Optional existing department data for edit mode
-     * If provided, the form operates in edit mode; otherwise, it's in create mode
-     */
-    existingDepartment?: {
-        id: string;
-        name: string;
-        managerId: string;
-        status?: string;
-    };
-}
+import type { DepartmentFormData, DepartmentCreateEditProps } from "~/types/types";
+import { departmentSchema } from "~/types/validation-schemas";
 
 /**
  * Department creation and editing form component.
