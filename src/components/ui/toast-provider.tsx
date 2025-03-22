@@ -1,7 +1,8 @@
 "use client";
 
 import { Toaster, toast } from "react-hot-toast";
-import { ReactNode, createContext, useContext } from "react";
+import { createContext, useContext } from "react";
+import type { ReactNode } from "react";
 import type { ToastContextType } from "~/types/types";
 
 /**
