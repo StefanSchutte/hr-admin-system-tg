@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
-import { UserCircle, LogOut, Users, Building2 } from "lucide-react";
+import { UserCircle, LogOut, Users, Building2, Menu } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
 import Loader from "~/components/ui/Loader";
 
@@ -18,6 +18,7 @@ import Loader from "~/components/ui/Loader";
  * 2. Manages redirects based on authentication status.
  * 3. Displays appropriate loading states during transitions.
  * 4. Renders the application layout including header and sidebar when authenticated.
+ * 5. Provides a collapsible sidebar menu that can be toggled.
  * @param props - Component props
  * @param props.children - Child components to render within the layout.
  * @returns A wrapped version of the children with authentication and layout.
@@ -33,6 +34,8 @@ export default function SessionWrapper({ children }: { children: ReactNode }) {
     const { showSuccess } = useToast();
     /** State to track if a redirect is in progress */
     const [isRedirecting, setIsRedirecting] = useState(false);
+    /** State to track if the sidebar is collapsed */
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     /**
      * Handle redirects based on authentication status and current path.
@@ -86,24 +89,39 @@ export default function SessionWrapper({ children }: { children: ReactNode }) {
         showSuccess("You have been successfully logged out");
     };
 
-    /** Sidebar width value */
-    const sidebarWidth = "w-46";
-    const sidebarWidthPx = "184px";
+    /**
+     * Toggles the sidebar between collapsed and expanded states
+     */
+    const toggleSidebar = () => {
+        setIsSidebarCollapsed(!isSidebarCollapsed);
+    };
+
+    /** Sidebar width values based on collapsed state */
+    const sidebarWidth = isSidebarCollapsed ? "w-16" : "w-46";
+    const sidebarWidthPx = isSidebarCollapsed ? "64px" : "184px";
 
     return (
         <div className="min-h-screen bg-gray-50">
             {session && (
                 <header className="sticky top-0 z-20 bg-slate-800 text-white shadow-md">
-                    <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="w-full px-1 sm:px-2 lg:px-4">
                         <div className="flex h-16 items-center justify-between">
-                            <div className="flex-shrink-0">
+                            <div className="flex-shrink-0 flex items-center">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={toggleSidebar}
+                                    className="mr-3 text-white hover:bg-emerald-700"
+                                >
+                                    <Menu className="h-5 w-5" />
+                                </Button>
                                 <h1 className="text-xl font-bold flex items-center">
                                     <Image
                                         src="/header-icon.png"
                                         alt="HR Admin"
                                         width={42}
                                         height={42}
-                                        className="mr-2"
+                                        className="m-2"
                                     />
                                     HR Administration System
                                 </h1>
@@ -131,31 +149,39 @@ export default function SessionWrapper({ children }: { children: ReactNode }) {
             )}
 
             <div className="flex">
-                {/* Fixed Sidebar navigation */}
+                {/* Sidebar navigation */}
                 {session && (
-                    <div className={`fixed ${sidebarWidth} h-[calc(100vh-4rem)] bg-slate-700 text-white shadow-lg z-10 overflow-y-auto`}>
+                    <div
+                        className={`fixed ${sidebarWidth} h-[calc(100vh-4rem)] bg-slate-700 text-white shadow-lg z-10 overflow-y-auto transition-all duration-300 ease-in-out`}
+                    >
                         <nav className="space-y-1 p-4">
                             <Link
                                 href="/employees"
-                                className={`flex items-center rounded-md px-4 py-3 text-sm font-medium transition-colors ${
+                                className={`flex items-center justify-center rounded-md px-4 py-3 text-sm font-medium transition-colors ${
                                     isActive('/employees')
                                         ? 'bg-emerald-700 text-white'
                                         : 'hover:bg-emerald-700'
                                 }`}
+                                title="Employees"
                             >
-                                <Users className="mr-3 h-5 w-5" />
-                                Employees
+                                <span className="flex items-center justify-center">
+                                    <Users className="h-5 w-5" />
+                                </span>
+                                {!isSidebarCollapsed && <span className="ml-3">Employees</span>}
                             </Link>
                             <Link
                                 href="/departments"
-                                className={`flex items-center rounded-md px-4 py-3 text-sm font-medium transition-colors ${
+                                className={`flex items-center justify-center rounded-md px-4 py-3 text-sm font-medium transition-colors ${
                                     isActive('/departments')
                                         ? 'bg-emerald-700 text-white'
                                         : 'hover:bg-emerald-700'
                                 }`}
+                                title="Departments"
                             >
-                                <Building2 className="mr-3 h-5 w-5" />
-                                Departments
+                                <span className="flex items-center justify-center">
+                                    <Building2 className="h-5 w-5" />
+                                </span>
+                                {!isSidebarCollapsed && <span className="ml-3">Departments</span>}
                             </Link>
                         </nav>
                     </div>
@@ -163,9 +189,7 @@ export default function SessionWrapper({ children }: { children: ReactNode }) {
 
                 {/* Main content */}
                 <main
-                    className={`flex-1 min-h-[calc(100vh-4rem)] overflow-auto p-6 bg-gray-50 ${
-                        session ? `ml-[${sidebarWidthPx}]` : ''
-                    }`}
+                    className={`flex-1 min-h-[calc(100vh-4rem)] overflow-auto p-6 bg-gray-50 transition-all duration-300 ease-in-out`}
                     style={session ? { marginLeft: sidebarWidthPx } : {}}
                 >
                     {children}
