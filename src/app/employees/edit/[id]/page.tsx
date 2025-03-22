@@ -4,7 +4,6 @@ import { api } from "~/trpc/react";
 import EmployeeCreateEdit from "~/components/employees/EmployeeCreateEdit";
 import { notFound } from "next/navigation";
 import Loader from "~/components/ui/Loader";
-import { use } from "react";
 
 /**
  * Page component for editing an existing employee.
@@ -14,10 +13,9 @@ import { use } from "react";
  * Creates a properly typed employee object that matches the expected props (formattedEmployee).
  * Render the employee edit form with the fetched data.
  */
-export default function EmployeeEditPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
+export default function EmployeeEditPage({ params }: { params: { id: string } }) {
 
-    const resolvedParams = params instanceof Promise ? use(params) : params;
-    const id = resolvedParams.id;
+    const id = params.id;
 
     const { data: employee, isLoading } = api.employee.getById.useQuery(id);
 

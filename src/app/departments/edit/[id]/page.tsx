@@ -4,7 +4,6 @@ import { api } from "~/trpc/react";
 import DepartmentCreateEdit from "~/components/departments/DepartmentCreateEdit";
 import { notFound } from "next/navigation";
 import Loader from "~/components/ui/Loader";
-import { use } from "react";
 
 /**
  * Page component for editing an existing department.
@@ -14,10 +13,9 @@ import { use } from "react";
  * Create a properly typed department object that matches the expected props.
  * Render the department edit form with the fetched data.
  */
-export default function DepartmentEditPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
+export default function DepartmentEditPage({ params }: { params: { id: string } }) {
 
-    const resolvedParams = params instanceof Promise ? use(params) : params;
-    const id = resolvedParams.id;
+    const id = params.id;
 
     const { data: department, isLoading } = api.department.getById.useQuery(id);
 
