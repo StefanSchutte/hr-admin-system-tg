@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import "~/styles/globals.css";
 import { Providers } from "./providers";
 import SessionWrapper from "~/components/auth/SessionWrapper";
