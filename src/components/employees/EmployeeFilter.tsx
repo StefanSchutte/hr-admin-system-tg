@@ -13,6 +13,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "~/components/ui/select";
+import { SearchableSelect } from "~/components/ui/searchable-select";
 import type { EmployeeFilterProps } from "~/types/types";
 
 /**
@@ -38,6 +39,24 @@ export function EmployeeFilter({
     const toggleCollapse = () => {
         setIsCollapsed(!isCollapsed);
     };
+
+    /** Convert departments to options format for SearchableSelect */
+    const departmentOptions = [
+        { value: "null", label: "All Departments" },
+        ...departments.map(dept => ({
+            value: dept.id,
+            label: dept.name
+        }))
+    ];
+
+    /** Convert managers to options format */
+    const managerOptions = [
+        { value: "null", label: "All Managers" },
+        ...managers.map(manager => ({
+            value: manager.id,
+            label: `${manager.firstName} ${manager.lastName}`
+        }))
+    ];
 
     return (
         <Card className="border-none shadow-md">
@@ -84,48 +103,28 @@ export function EmployeeFilter({
 
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-600">Department</label>
-                            <Select
-                                value={departmentFilter ?? undefined}
-                                onValueChange={(value) => {
-                                    setDepartmentFilter(value);
+                            <SearchableSelect
+                                options={departmentOptions}
+                                value={departmentFilter ?? "null"}
+                                onChangeAction={(value) => {
+                                    setDepartmentFilter(value === "null" ? null : value);
                                     setCurrentPage(1);
                                 }}
-                            >
-                                <SelectTrigger className="bg-white">
-                                    <SelectValue placeholder="Select department" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="null">All Departments</SelectItem>
-                                    {departments.map((dept) => (
-                                        <SelectItem key={dept.id} value={dept.id}>
-                                            {dept.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                placeholder="Select department"
+                            />
                         </div>
 
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-600">Manager</label>
-                            <Select
-                                value={managerFilter ?? undefined}
-                                onValueChange={(value) => {
-                                    setManagerFilter(value);
+                            <SearchableSelect
+                                options={managerOptions}
+                                value={managerFilter ?? "null"}
+                                onChangeAction={(value) => {
+                                    setManagerFilter(value === "null" ? null : value);
                                     setCurrentPage(1);
                                 }}
-                            >
-                                <SelectTrigger className="bg-white">
-                                    <SelectValue placeholder="Select manager" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="null">All Managers</SelectItem>
-                                    {managers.map((manager) => (
-                                        <SelectItem key={manager.id} value={manager.id}>
-                                            {manager.firstName} {manager.lastName}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                placeholder="Select manager"
+                            />
                         </div>
                     </div>
                 </CardContent>

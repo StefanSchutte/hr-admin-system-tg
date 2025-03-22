@@ -1,16 +1,4 @@
 /**
- * User role types
- * Defines the possible roles a user can have in the system
- */
-export type UserRole = "ADMIN" | "MANAGER" | "EMPLOYEE";
-
-/**
- * Status types
- * Defines the possible status values for employees and departments
- */
-export type Status = "ACTIVE" | "INACTIVE";
-
-/**
  * Sort direction options
  */
 export type SortDirection = 'asc' | 'desc';
@@ -87,15 +75,6 @@ export interface EmployeeCreateEditProps {
 }
 
 /**
- * Employee filter options
- */
-export interface EmployeeFilters {
-    status: "ALL" | "ACTIVE" | "INACTIVE";
-    managerId?: string;
-    departmentId?: string;
-}
-
-/**
  * Props for the EmployeeFilter component
  * @interface EmployeeFilterProps
  * @property {string} statusFilter - Current status filter value ("ALL", "ACTIVE", or "INACTIVE")
@@ -112,9 +91,9 @@ export interface EmployeeFilterProps {
     statusFilter: string;
     setStatusFilter: (value: string) => void;
     departmentFilter: string | null;
-    setDepartmentFilter: (value: string) => void;
+    setDepartmentFilter: (value: string | null) => void;
     managerFilter: string | null;
-    setManagerFilter: (value: string) => void;
+    setManagerFilter: (value: string | null ) => void;
     departments: Array<{ id: string; name: string }>;
     managers: Array<{ id: string; firstName: string; lastName: string }>;
     setCurrentPage: (page: number) => void;
@@ -153,13 +132,6 @@ export interface DepartmentFormData {
 }
 
 /**
- * Department filter options
- */
-export interface DepartmentFilters {
-    status: "ALL" | "ACTIVE" | "INACTIVE";
-}
-
-/**
  * Props interface for the DepartmentCreateEdit component
  */
 export interface DepartmentCreateEditProps {
@@ -186,38 +158,6 @@ export interface DepartmentFilterProps {
     statusFilter: string;
     setStatusFilter: (value: string) => void;
     setCurrentPage: (page: number) => void;
-}
-
-/**
- * Manager type for select dropdowns
- */
-export interface ManagerOption {
-    id: string;
-    firstName: string;
-    lastName: string;
-}
-
-/**
- * Department option for select dropdowns
- */
-export interface DepartmentOption {
-    id: string;
-    name: string;
-}
-
-/**
- * Authentication types
- */
-
-/**
- * Extended session user with role and employee ID
- */
-export interface SessionUser {
-    id: string;
-    email: string;
-    name?: string | null;
-    role: UserRole;
-    employeeId?: string;
 }
 
 /**
@@ -250,25 +190,20 @@ export interface PaginationProps {
  * Defines the methods available through the useToast hook
  */
 export type ToastContextType = {
-    /**
-     * Displays a success toast notification
-     * @param message - The message to display in the toast
-     */
     showSuccess: (message: string) => void;
-    /**
-     * Displays an error toast notification
-     * @param message - The message to display in the toast
-     */
     showError: (message: string) => void;
-    /**
-     * Displays a loading toast notification
-     * @param message - The message to display in the toast
-     * @returns A promise that resolves to the toast ID, which can be used to dismiss the toast
-     */
     showLoading: (message: string) => Promise<string>;
-    /**
-     * Dismisses a loading toast notification by its ID
-     * @param toastId - The ID of the toast to dismiss
-     */
     dismissLoading: (toastId: string) => void;
 };
+
+/**
+ * Interface for search functionality in select dropdown.
+ */
+export interface SearchableSelectProps {
+    value: string;
+    onChangeAction: (value: string) => void;
+    options: { value: string; label: string }[];
+    placeholder?: string;
+    className?: string;
+    disabled?: boolean;
+}

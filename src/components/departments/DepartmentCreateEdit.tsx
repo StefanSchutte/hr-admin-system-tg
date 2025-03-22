@@ -14,6 +14,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "~/components/ui/select";
+import { SearchableSelect } from "~/components/ui/searchable-select";
 import { api } from "~/trpc/react";
 import {
     Card,
@@ -46,6 +47,12 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
 
     /** Fetch all employees eligible to be department managers */
     const { data: managers = [], isLoading: managersLoading } = api.employee.getAllForDepartmentManager.useQuery();
+
+    /** Convert managers to options format for SearchableSelect */
+    const managerOptions = managers.map(manager => ({
+        value: manager.id,
+        label: `${manager.firstName} ${manager.lastName}`
+    }));
 
     /**
      * TRPC mutation for creating a new department.
@@ -189,24 +196,13 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
                                     control={control}
                                     render={({ field }) => (
                                         <div>
-                                            <Select
+                                            <SearchableSelect
                                                 value={field.value}
-                                                onValueChange={field.onChange}
-                                            >
-                                                <SelectTrigger className={`bg-white ${errors.managerId ? "border-red-300" : ""}`}>
-                                                    <SelectValue placeholder="Select manager" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {managers.map((manager) => (
-                                                        <SelectItem
-                                                            key={manager.id}
-                                                            value={manager.id}
-                                                        >
-                                                            {manager.firstName} {manager.lastName}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                                onChangeAction={field.onChange}
+                                                options={managerOptions}
+                                                placeholder="Select manager"
+                                                className={errors.managerId ? "border-red-300" : ""}
+                                            />
                                             {errors.managerId && (
                                                 <p className="text-red-500 text-sm mt-1 flex items-center">
                                                     <AlertCircle className="h-4 w-4 mr-1" />

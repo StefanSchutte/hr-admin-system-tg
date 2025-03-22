@@ -26,7 +26,14 @@ This project is an HR Administration System built with the T3 stack, designed to
 - **API Layer**: tRPC
 - **Form Validation**: Zod with react-hook-form
 - **State Management**: React Query (via tRPC)
-- **UI Components**: Lucide React for icons
+- **UI Components**:
+    - Lucide React for icons
+    - React Hot Toast for notifications
+    - Geist font
+- **Build Tools**:
+    - ESLint for code linting
+    - Prettier for code formatting
+- **Deployment**: Render (with persistent SQLite storage)
 
 ## Getting Started
 
@@ -74,6 +81,21 @@ This project is an HR Administration System built with the T3 stack, designed to
    ```
 
 7. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+
+## Deployment
+
+The application has been deployed on Render and is accessible at:
+
+https://hr-admin-system-tg.onrender.com/
+
+### Note about the Render Free Tier
+
+This project is deployed on Render's free tier with the following characteristics:
+
+- **Spin-down with inactivity**: The service automatically spins down after 15 minutes of inactivity.
+- **Cold start delays**: When accessing the site after inactivity, the initial request may take up to 50 seconds while the service spins up.
+- **Database persistence**: Unlike Vercel's ephemeral filesystem, Render allows SQLite database changes to persist between sessions.
+
 
 ### Default Admin User
 

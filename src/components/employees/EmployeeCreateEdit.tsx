@@ -15,6 +15,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "~/components/ui/select";
+import { SearchableSelect } from "~/components/ui/searchable-select";
 import { api } from "~/trpc/react";
 import {
     Card,
@@ -291,28 +292,25 @@ export default function EmployeeCreateEdit({ existingEmployee }: EmployeeCreateE
                             <Controller
                                 name="managerId"
                                 control={control}
-                                render={({ field }) => (
-                                    <Select
-                                        value={field.value}
-                                        onValueChange={field.onChange}
-                                        disabled={existingEmployee && !isAdmin}
-                                    >
-                                        <SelectTrigger className="bg-white">
-                                            <SelectValue placeholder="Select manager" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="null">No Manager</SelectItem>
-                                            {managers.map((manager) => (
-                                                <SelectItem
-                                                    key={manager.id}
-                                                    value={manager.id}
-                                                >
-                                                    {manager.firstName} {manager.lastName}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
+                                render={({ field }) => {
+                                    const managerOptions = [
+                                        { value: "null", label: "No Manager" },
+                                        ...managers.map(manager => ({
+                                            value: manager.id,
+                                            label: `${manager.firstName} ${manager.lastName}`
+                                        }))
+                                    ];
+
+                                    return (
+                                        <SearchableSelect
+                                            value={field.value ?? "null"}
+                                            onChangeAction={field.onChange}
+                                            options={managerOptions}
+                                            placeholder="Select manager"
+                                            disabled={existingEmployee && !isAdmin}
+                                        />
+                                    );
+                                }}
                             />
                             {existingEmployee && !isAdmin && (
                                 <p className="text-xs text-amber-600 mt-1">
