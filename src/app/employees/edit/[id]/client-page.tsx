@@ -1,18 +1,16 @@
 "use client";
 
+import { Suspense, lazy } from "react";
 import { api } from "~/trpc/react";
-import EmployeeCreateEdit from "~/components/employees/EmployeeCreateEdit";
 import { notFound } from "next/navigation";
 import Loader from "~/components/ui/Loader";
+
+const EmployeeCreateEdit = lazy(() => import("~/components/employees/EmployeeCreateEdit"));
 
 /**
  * Client Component for editing an existing employee.
  * Handles data fetching, loading states, and renders the employee edit form.
- * - Fetching employee data using tRPC
- * - Showing loading states while data is being fetched
- * - Showing a 404 page if the employee doesn't exist
- * - Formatting employee data for the form component
- * - Rendering the EmployeeCreateEdit form with the fetched data
+ * Uses React.lazy and Suspense for better component loading.
  * @param props - Component props containing the employee ID
  * @returns Employee edit form or loading/error states
  */
@@ -37,5 +35,9 @@ export default function EmployeeClientPage({ employeeId }: { employeeId: string 
         status: employee.status as "ACTIVE" | "INACTIVE" | undefined
     };
 
-    return <EmployeeCreateEdit existingEmployee={formattedEmployee} />;
+    return (
+        <Suspense fallback={<Loader />}>
+            <EmployeeCreateEdit existingEmployee={formattedEmployee} />
+        </Suspense>
+    );
 }

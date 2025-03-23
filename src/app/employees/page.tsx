@@ -1,12 +1,19 @@
 "use client";
 
-import EmployeeList from "~/components/employees/EmployeeList";
+import { Suspense, lazy } from "react";
+import Loader from "~/components/ui/Loader";
+
+const EmployeeList = lazy(() => import("~/components/employees/EmployeeList"));
 
 /**
  * Renders the EmployeeList component which displays all employees and provides options for employee management (create, edit, delete).
- * This component serves as the entry point for the employees section of the application.
- * @returns Employee list component
+ * Uses React.lazy and Suspense to show a loader while the component is loading.
+ * @returns Employee list component with loading fallback
  */
 export default function EmployeesPage() {
-    return <EmployeeList />;
+    return (
+        <Suspense fallback={<Loader />}>
+            <EmployeeList />
+        </Suspense>
+    );
 }
