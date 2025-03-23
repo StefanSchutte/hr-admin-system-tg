@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,6 +47,11 @@ export default function DepartmentCreateEdit({ existingDepartment }: DepartmentC
 
     /** Fetch all employees eligible to be department managers */
     const { data: managers = [], isLoading: managersLoading } = api.employee.getAllForDepartmentManager.useQuery();
+
+    /** Force a refetch of the managers data */
+    useEffect(() => {
+        void utils.employee.getAllForDepartmentManager.invalidate();
+    }, [utils.employee.getAllForDepartmentManager]);
 
     /** Convert managers to options format for SearchableSelect */
     const managerOptions = managers.map(manager => ({

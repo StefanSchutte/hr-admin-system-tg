@@ -98,81 +98,82 @@ export default function LoginForm() {
                             HR Administration System
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-6 pb-4">
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                                <FormField
-                                    control={form.control}
-                                    name="email"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="font-medium">Username</FormLabel>
-                                            <div className="relative">
-                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                                    <User className="h-5 w-5" />
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)}>
+                            <CardContent className="pt-6 pb-4">
+                                <div className="space-y-5">
+                                    <FormField
+                                        control={form.control}
+                                        name="email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="font-medium">Username</FormLabel>
+                                                <div className="relative">
+                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                                        <User className="h-5 w-5" />
+                                                    </div>
+                                                    <FormControl>
+                                                        <Input
+                                                            placeholder="Email address"
+                                                            className="pl-10 bg-slate-50"
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
                                                 </div>
-                                                <FormControl>
-                                                    <Input
-                                                        placeholder="Email address"
-                                                        className="pl-10 bg-slate-50"
-                                                        {...field}
-                                                    />
-                                                </FormControl>
-                                            </div>
-                                            <FormMessage className="text-sm" />
-                                        </FormItem>
-                                    )}
-                                />
+                                                <FormMessage className="text-sm" />
+                                            </FormItem>
+                                        )}
+                                    />
 
-                                <FormField
-                                    control={form.control}
-                                    name="password"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="font-medium">Password</FormLabel>
-                                            <div className="relative">
-                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                                    <Lock className="h-5 w-5" />
+                                    <FormField
+                                        control={form.control}
+                                        name="password"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="font-medium">Password</FormLabel>
+                                                <div className="relative">
+                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                                        <Lock className="h-5 w-5" />
+                                                    </div>
+                                                    <FormControl>
+                                                        <Input
+                                                            type="password"
+                                                            placeholder="Password"
+                                                            className="pl-10 bg-slate-50"
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
                                                 </div>
-                                                <FormControl>
-                                                    <Input
-                                                        type="password"
-                                                        placeholder="Password"
-                                                        className="pl-10 bg-slate-50"
-                                                        {...field}
-                                                    />
-                                                </FormControl>
-                                            </div>
-                                            <FormMessage className="text-sm" />
-                                        </FormItem>
-                                    )}
-                                />
+                                                <FormMessage className="text-sm" />
+                                            </FormItem>
+                                        )}
+                                    />
 
-                                {error && (
-                                    <div className="rounded-md bg-red-50 p-3 text-sm font-medium text-red-600">
-                                        {error}
-                                    </div>
-                                )}
-                            </form>
-                        </Form>
-                    </CardContent>
-                    <CardFooter className="flex justify-center border-t pt-6 pb-6">
-                        <Button
-                            type="submit"
-                            className="w-full bg-emerald-600 hover:bg-emerald-700"
-                            onClick={form.handleSubmit(onSubmit)}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <>
-                                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                                    Logging in...
-                                </>
-                            ) : (
-                                "Login"
-                            )}
-                        </Button>
-                    </CardFooter>
+                                    {error && (
+                                        <div className="rounded-md bg-red-50 p-3 text-sm font-medium text-red-600">
+                                            {error}
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                            <CardFooter className="flex justify-center border-t pt-6 pb-6">
+                                <Button
+                                    type="submit"
+                                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                                            Logging in...
+                                        </>
+                                    ) : (
+                                        "Login"
+                                    )}
+                                </Button>
+                            </CardFooter>
+                        </form>
+                    </Form>
                 </Card>
             </div>
         </div>
