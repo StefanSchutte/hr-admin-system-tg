@@ -31,7 +31,7 @@ import {
     Mail,
     Save,
     X,
-    Users
+    Users, Info
 } from "lucide-react";
 import { useToast } from "~/components/ui/toast-provider";
 import type { EmployeeFormData, EmployeeCreateEditProps } from "~/types/types";
@@ -307,40 +307,50 @@ export default function EmployeeCreateEdit({ existingEmployee }: EmployeeCreateE
                                             onChangeAction={field.onChange}
                                             options={managerOptions}
                                             placeholder="Select manager"
-                                            disabled={existingEmployee && !isAdmin}
+                                            disabled={!isAdmin}
                                         />
                                     );
                                 }}
                             />
-                            {existingEmployee && !isAdmin && (
-                                <p className="text-xs text-amber-600 mt-1">
+                            {!isAdmin && (
+                                <p className="text-xs text-amber-600 flex items-center mt-1">
+                                    <Info className="h-3 w-3 mr-1" />
                                     Only HR Administrators can change the manager.
                                 </p>
                             )}
                         </div>
 
                         {/* Status field only for edit and for admin */}
-                        {existingEmployee && isAdmin && (
+                        {existingEmployee && (
                             <div>
                                 <label className="block mb-2 text-sm font-medium text-slate-700">Status</label>
-                                <Controller
-                                    name="status"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            value={field.value}
-                                            onValueChange={field.onChange}
-                                        >
-                                            <SelectTrigger className="bg-white">
-                                                <SelectValue placeholder="Select status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="ACTIVE" className="text-emerald-600">Active</SelectItem>
-                                                <SelectItem value="INACTIVE" className="text-red-600">Inactive</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                <div className="space-y-1">
+                                    <Controller
+                                        name="status"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select
+                                                value={field.value}
+                                                onValueChange={field.onChange}
+                                                disabled={!isAdmin}
+                                            >
+                                                <SelectTrigger className="bg-white" title={!isAdmin ? "Action only allowed for administrator" : ""}>
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="ACTIVE" className="text-emerald-600">Active</SelectItem>
+                                                    <SelectItem value="INACTIVE" className="text-red-600">Inactive</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                    {!isAdmin && (
+                                        <p className="text-amber-600 text-xs flex items-center mt-1">
+                                            <Info className="h-3 w-3 mr-1" />
+                                            Only HR Administrators can change employee status.
+                                        </p>
                                     )}
-                                />
+                                </div>
                             </div>
                         )}
 

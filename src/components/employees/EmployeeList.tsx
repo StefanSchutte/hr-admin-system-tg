@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
@@ -60,6 +61,8 @@ function isValidEmployee(employee: unknown): employee is Employee {
  */
 export default function EmployeeList() {
     const router = useRouter();
+    const { data: session } = useSession();
+    const isAdmin = session?.user?.role === "ADMIN";
     /** Filter by employee status (ALL, ACTIVE, INACTIVE) */
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
     /** Filter by manager (manager ID or null for all) */
@@ -336,6 +339,7 @@ export default function EmployeeList() {
                                                             : "border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300"
                                                     }
                                                     onClick={() => handleToggleStatus(employee.id, employee.status)}
+                                                    disabled={!isAdmin}
                                                 >
                                                     {employee.status === "ACTIVE" ? "Deactivate" : "Activate"}
                                                 </Button>

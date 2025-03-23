@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
@@ -43,6 +44,7 @@ import type {
  */
 export default function DepartmentList() {
     const router = useRouter();
+    const { data: session } = useSession();
     /** Filter by department status (ALL, ACTIVE, INACTIVE) */
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
     /** Text search query for filtering departments */
@@ -52,6 +54,8 @@ export default function DepartmentList() {
     /** Current page number */
     const [currentPage, setCurrentPage] = useState<number>(1);
     const { showSuccess, showError, showLoading, dismissLoading } = useToast();
+    /** Check if user is admin */
+    const isAdmin = session?.user?.role === "ADMIN";
 
     /** Field currently being used for sorting */
     const [sortField, setSortField] = useState<DepartmentSortField>('name');
@@ -164,6 +168,7 @@ export default function DepartmentList() {
                 <Button
                     onClick={() => router.push("/departments/create")}
                     className="bg-emerald-600 hover:bg-emerald-700"
+                    disabled={!isAdmin}
                 >
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Department
@@ -267,11 +272,22 @@ export default function DepartmentList() {
                                     <TableRow key={department.id} className="hover:bg-slate-50">
                                         <TableCell>
                                             <div className="flex space-x-2">
-                                                <Link href={`/departments/edit/${department.id}`}>
-                                                    <Button variant="outline" size="sm" className="border-slate-300 hover:border-slate-400 hover:bg-slate-100">
+                                                {isAdmin ? (
+                                                    <Link href={`/departments/edit/${department.id}`}>
+                                                        <Button variant="outline" size="sm" className="border-slate-300 hover:border-slate-400 hover:bg-slate-100">
+                                                            Edit
+                                                        </Button>
+                                                    </Link>
+                                                ) : (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="border-slate-300 opacity-50 cursor-not-allowed"
+                                                        disabled={true}
+                                                    >
                                                         Edit
                                                     </Button>
-                                                </Link>
+                                                )}
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
@@ -281,6 +297,7 @@ export default function DepartmentList() {
                                                             : "border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300"
                                                     }
                                                     onClick={() => handleToggleStatus(department.id, department.status)}
+                                                    disabled={!isAdmin}
                                                 >
                                                     {department.status === "ACTIVE" ? "Deactivate" : "Activate"}
                                                 </Button>
